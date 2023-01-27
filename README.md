@@ -5,7 +5,7 @@
 In this exercise, we will exploit **shared memory parallelism** to solve
 a standard partial differential equation, the 3D Poisson equation:
 
-```latex
+```math
 \frac{\partial^2 u}{\partial x^2} + 
 \frac{\partial^ u2}{\partial y^2} + 
 \frac{\partial^2 u}{\partial z^2} + 
@@ -13,6 +13,9 @@ a standard partial differential equation, the 3D Poisson equation:
 ```
 on a unit cube, subject to Dirichlet boundary conditions
 
+... todo ...
+
+## Your Tasks
 
 1. implement the missing functions ``axpby``, ``dot``,and ``matvec``  parallelized for shared memory using OpenMP.
 The specification of these functions can be found in the file ``src/operations.c``.
@@ -34,3 +37,7 @@ When running these jobs, modify the commands in the jobscript ``cg_scaling.slurm
 It predicts the overall runtime to be the sum of the cost of computation and communication phases. Can you spot opportunities in the CG algorithm to reduce
 the number of stages/loops? Implement your own version of the algorithm with fewer loops, and measure if this makes the method faster. Explain your observations
 (Hint: we give you the macro ``TIME_SECTION`` to get insight into which operations take how long).
+
+5. Do you observe a performance difference when solving a $`1024 \times 128 \times 128`$ or a $`128 \times 128 \times 1024`$ problem on 8 cores? Explain
+your observation. Implement an improved ``matvec`` function that overcomes this asymmetry.
+
