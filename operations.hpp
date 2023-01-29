@@ -20,7 +20,7 @@ void axpby(int n, double a, double const* x, double b, double const* y, double* 
 typedef struct stencil3d
 {
   int nx, ny, nz;
-  double center, north, east, south, west, bottom, top;
+  double value_c, value_n, value_e, value_s, value_w, value_b, value_t;
 
   inline int index_c(int i, int j, int k) const
   {
