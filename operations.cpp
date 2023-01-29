@@ -20,7 +20,7 @@ void axpby(int n, double a, double const* x, double b, double const* y, double* 
 }
 
 //! apply a 7-point stencil to a vector
-void apply_stencil3d(stencil const* S,
+void apply_stencil3d(stencil3d const* S,
         double const* u, double* v)
 {
   // YOUR TASK
