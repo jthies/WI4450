@@ -2,10 +2,12 @@
 #include "cg_solver.hpp"
 #include "operations.hpp"
 
+#include <cmath>
 #include <stdexcept>
 
 void cg_solver(stencil3d const* op, int n, double* x, double const* b,
-        double tol, int maxIter)
+        double tol, int maxIter,
+        double* resNorm, int* numIter)
 {
   if (op->nx * op->ny * op->nz != n)
   {
@@ -16,11 +18,11 @@ void cg_solver(stencil3d const* op, int n, double* x, double const* b,
   double *q = new double[n];
   double *r = new double[n];
 
-  double alpha, rho=1.0, rho_old=0.0;
+  double alpha, beta, rho=1.0, rho_old=0.0;
 
   // r = op * x
   // [...]
-                    x_values, r);
+
   // r = b - r;
   // [...]
 
@@ -36,7 +38,7 @@ void cg_solver(stencil3d const* op, int n, double* x, double const* b,
     // rho = <r, r>
 
     // check for convergence or failure
-    if ((std::sqrt(rho) < crit.tol) || (iter > maxIter))
+    if ((std::sqrt(rho) < tol) || (iter > maxIter))
     {
       break;
     }
@@ -52,7 +54,7 @@ void cg_solver(stencil3d const* op, int n, double* x, double const* b,
     // beta = <p,q>
     // [...]
 
-    alpha = rho / beta
+    alpha = rho / beta;
 
     // x = x + alpha * p
     // [...]
@@ -63,11 +65,13 @@ void cg_solver(stencil3d const* op, int n, double* x, double const* b,
     std::swap(rho_old, rho);
   }// end of while-loop
 
-  // TODO: return iter and/or res=sqrt(rho)?
-
-
   // clean up
   delete [] p;
   delete [] q;
   delete [] r;
+
+  // return number of iterations and achieved residual
+  *resNorm = rho;
+  *numIter = iter;
+  return;
 }
