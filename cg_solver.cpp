@@ -5,9 +5,13 @@
 #include <cmath>
 #include <stdexcept>
 
+#include <iostream>
+#include <iomanip>
+
 void cg_solver(stencil3d const* op, int n, double* x, double const* b,
         double tol, int maxIter,
-        double* resNorm, int* numIter)
+        double* resNorm, int* numIter,
+        int verbose)
 {
   if (op->nx * op->ny * op->nz != n)
   {
@@ -36,6 +40,12 @@ void cg_solver(stencil3d const* op, int n, double* x, double const* b,
     iter++;
 
     // rho = <r, r>
+    // [...]
+
+    if (verbose)
+    {
+      std::cout << std::setw(4) << iter << "\t" << std::setw(8) << std::setprecision(4) << rho << std::endl;
+    }
 
     // check for convergence or failure
     if ((std::sqrt(rho) < tol) || (iter > maxIter))
