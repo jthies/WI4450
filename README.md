@@ -1,6 +1,6 @@
 # Special Topics in CSE: High Performance Computing for Linear Algebra
 
-## Homework 1: Conjugate Gradient Method
+## Homework 1: Conjugate Gradient Method with OpenMP
 
 In this exercise, we will exploit **shared memory parallelism** to solve
 a standard partial differential equation, the 3D Poisson equation:
