@@ -7,7 +7,7 @@ a standard partial differential equation, the 3D Poisson equation:
 
 ```math
 - (\frac{\partial^2 u}{\partial x^2} + 
-\frac{\partial^ u2}{\partial y^2} + 
+\frac{\partial^2 u}{\partial y^2} + 
 \frac{\partial^2 u}{\partial z^2})
 = f(x,y,z),
 ```
