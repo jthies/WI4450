@@ -50,9 +50,11 @@ stencil3d laplace3d_stencil(int nx, int ny, int nz)
 
 int main(int argc, char* argv[])
 {
-  int nx=128, ny=-1, nz=-1;
-  if (argc>1) nx=atoi(argv[0]);
-  if (argc==4) {ny=atoi(argv[1]); nz=atoi(argv[2]);}
+  int nx, ny, nz;
+
+  if      (argc==1) {nx=128;           ny=128;           nz=128;}
+  else if (argc==2) {nx=atoi(argv[1]); ny=nx;            nz=nx;}
+  else if (argc==4) {nx=atoi(argv[1]); ny=atoi(argv[2]); nz=atoi(argv[3]);}
   else {std::cerr << "Invalid number of arguments (should be 0, 1 or 3)"<<std::endl; exit(-1);}
   if (ny<0) ny=nx;
   if (nz<0) nz=nx;
