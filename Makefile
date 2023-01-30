@@ -26,7 +26,12 @@ main_cg_poisson.x: ${MAIN_OBJ}
 	${CXX} ${CXX_FLAGS} ${DEFS} -o main_cg_poisson.x $^
 
 
-PHONY: clean
+test: run_tests.x
+	./run_tests.x
 
 clean:
 	-rm *.o *.x
+
+# phony targets are run regardless of dependencies being up-to-date
+PHONY: clean, test
+

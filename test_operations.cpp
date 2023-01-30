@@ -36,17 +36,22 @@ TEST(stencil, index_order_kji)
   EXPECT_EQ(S.index_c(i,j,k), S.index_c(i,j,k-1)+S.nx*S.ny);
 }
 
-TEST(operations, init) {
-  double res;
+TEST(operations, init)
+{
   const int n=15;
   double x[n];
-  double val=1.0;
+  for (int i=0; i<n; i++) x[i]=double(i+1);
+
+  double val=42.0;
   init(n, x, val);
 
   double err=0.0;
-  for (int i=0; i<n; i++) err += std::abs(x[i]-val);
+  for (int i=0; i<n; i++) err = std::max(err, std::abs(x[i]-val));
 
-  EXPECT_NEAR(res, 0.0, std::numeric_limits<double>::epsilon());
+  // note: EXPECT_NEAR uses a tolerance relative to the size of the target,
+  // near 0 this is very small, so we use an absolute test instead by 
+  // comparing to 1 instead of 0.
+  EXPECT_NEAR(1.0+err, 1.0, std::numeric_limits<double>::epsilon());
 }
 
 
