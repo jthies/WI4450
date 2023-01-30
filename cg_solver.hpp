@@ -9,4 +9,5 @@
 // is returned in *resNorm, the number of iterations in *numIter.
 void cg_solver(stencil3d const* op, int n, double* x, double const* b,
         double  tol,     int  maxIter,
-        double* resNorm, int* numIter);
+        double* resNorm, int* numIter,
+        int verbose=1);
