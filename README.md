@@ -11,7 +11,7 @@ a standard partial differential equation, the 3D Poisson equation:
 \frac{\partial^2 u}{\partial z^2})
 = f(x,y,z),
 ```
-on a unit cube $\Omega = [0\dots 1] \times [0 \dots 1] \times [0\dots 1]`$, subject to Dirichlet boundary conditions
+on a unit cube $`\Omega = [0\dots 1] \times [0 \dots 1] \times [0\dots 1]`$, subject to Dirichlet boundary conditions
 
 ```math
 u(x,y,z)=0 \mathrm{if} x=0, x=1, y=0, \mathrm{or} y=1 \mathrm{or} z=1.
