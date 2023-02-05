@@ -69,3 +69,53 @@ TEST(operations, dot) {
   EXPECT_NEAR(res, (double)n, n*std::numeric_limits<double>::epsilon());
 }
 
+TEST(operations,stencil3d_symmetric)
+{
+//  const int nx=3, ny=4, nz=5;
+  const int nx=2, ny=2, nz=2;
+  const int n=nx*ny*nz;
+  double* e=new double[n];
+  for (int i=0; i<n; i++) e[i]=0.0;
+  double* A=new double[n*n];
+
+  stencil3d S;
+
+  S.nx=nx; S.ny=ny; S.nz=nz;
+  S.value_c = 8;
+  S.value_n = 2;
+  S.value_e = 4;
+  S.value_s = 2;
+  S.value_w = 4;
+  S.value_b = 1;
+  S.value_t = 1;
+
+  for (int i=0; i<n; i++)
+  {
+    e[i]=1.0;
+    if (i>0) e[i-1]=0.0;
+    apply_stencil3d(&S, e, A+i*n);
+  }
+
+  int wrong_entries=0;
+  for (int i=0; i<n; i++)
+    for (int j=0; j<n; j++)
+    {
+      if (A[i*n+j]!=A[j*n+i]) wrong_entries++;
+    }
+  EXPECT_EQ(0, wrong_entries);
+
+  if (wrong_entries)
+  {
+    std::cout << "Your matrix (computed on a 2x2x2 grid by apply_stencil(I)) is ..."<<std::endl;
+    for (int j=0; j<n; j++)
+    {
+      for (int i=0; i<n; i++)
+      {
+        std::cout << A[i*n+j] << " ";
+      }
+      std::cout << std::endl;
+    }
+  }
+  delete [] e;
+  delete [] A;
+}
