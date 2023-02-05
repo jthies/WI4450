@@ -53,8 +53,14 @@ void cg_solver(stencil3d const* op, int n, double* x, double const* b,
       break;
     }
 
-    alpha = rho / rho_old;
-
+    if (rho_old==0.0)
+    {
+      alpha = 0.0;
+    }
+    else
+    {
+      alpha = rho / rho_old;
+    }
     // p = r + alpha * p
     // [...]
 
