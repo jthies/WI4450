@@ -1,4 +1,4 @@
-# Special Topics in CSE: High Performance Computing for Linear Algebra
+# Special Topics in CSE: Preconditioned Krylov Methods for High Performance Computing
 
 ## Homework 1: Conjugate Gradient Method with OpenMP
 
@@ -13,8 +13,8 @@ a standard partial differential equation, the 3D Poisson equation:
 ```
 on a unit cube $`\Omega = [0\dots 1] \times [0 \dots 1] \times [0\dots 1]`$, subject to Dirichlet boundary conditions
 
-- u(x,y,z)=0\ if x=0, x=1, y=0, y=1, or z=1,
-- u(x,y,z)=g(x,y)\ if z=0.
+- u(x,y,z)=0 if x=0, x=1, y=0, y=1, or z=1,
+- u(x,y,z)=g(x,y) if z=0.
 
 The PDE is discretized using second order finite diferences, and solved via the Conjugate Gradient method.
 
