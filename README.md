@@ -83,7 +83,4 @@ the number of stages/loops? Implement your own version of the algorithm with few
 
 ## Optional bonus task
 
-8. Make your basic operations run on the GPU using OpenMP offloading (see [this repository](https://gitlab.tudelft.nl/dhpc/training/c-examples) for examples).
-Are all your tests still passing? Is the CG solver working correctly? And how fast is a V100s GPU compared to a standard compute node?
-
-
+8. Make your basic operations run on the GPU using OpenMP ``target`` directives or C++20 (see [this repository](https://gitlab.tudelft.nl/dhpc/training/cxx-examples) for C++20 examples). Use the nvhpc compilers and the DelftBlue GPU nodes, as illustrated in that repo. Are all your tests still passing? Is the CG solver working correctly? And how fast is it on a V100s GPU compared to a standard compute node?
