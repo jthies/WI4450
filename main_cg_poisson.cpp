@@ -96,7 +96,7 @@ int main(int argc, char* argv[])
   for (int j=0; j<ny; j++)
     for (int i=0; i<nx; i++)
     {
-      b[L.index_c(i,j,0)] = g_0(i*dx, j*dy);
+      b[L.index_c(i,j,0)] -= g_0(i*dx, j*dy)/(dz*dz);
     }
 
   // solve the linear system of equations using CG
