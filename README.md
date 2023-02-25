@@ -29,7 +29,7 @@ The PDE is discretized using second order finite diferences, and solved via the 
 ### Report
 
 Write a short report on your findings, in particular answering the questions posed below.
-Include the report in PDF format in your submission.
+Include the report in PDF format in your submission (see below).
 
 ### Working with the repository
 
@@ -40,9 +40,9 @@ Include the report in PDF format in your submission.
 
 ### Submission
 
-- add the final report as a PDF file (you may keep a LaTeX file or other source file in the repository, too).
-- push your latest version of the ``<netid>`` branch to your forked repo
-- create a merge request, using ``<netid>`` as both the source and target branch. If the original repository
+- Add the final report as a PDF file (you may keep a LaTeX file or other source file in the repository, too).
+- Push your latest version of the ``<netid>`` branch to your forked repo
+- Create a merge request, using ``<netid>`` as both the source and target branch. If the original repository
 does not have this branch for your NetID, contact ``j.thies@tudelft.nl``.
 
 ## Your Tasks
@@ -55,6 +55,9 @@ does not have this branch for your NetID, contact ``j.thies@tudelft.nl``.
    second derivative of a 1D function in each direction, and should be second order accurate.
    Some simple examples of a unit test is given in ``test_operations.cpp``, where you can add your own as well.
    To compile and run the unit tests, use ``make test``. This may be done on the login node when developing on DelftBlue.
+   **Note:** you can implement the matrix-vector product with a 7-point stencil in any way you like (matrix-free, by storing
+   diagonals, etc.). Start with a simple implementation and create sufficient unit tests so that you can then refine it.
+   The tricky part here are the boundary conditions.
 
 2. Complete the Conjugate Gradient method in ``cg_solver.cpp`` by calling ythe previously implemented functions in the
    locations indicated by an ellipse (``[...]``). Compile and run the driver application by typing ``make``. This executable creates a 3D Poisson problem and solves
@@ -72,7 +75,7 @@ does not have this branch for your NetID, contact ``j.thies@tudelft.nl``.
    How many cores are optimal for the ``main_cg_poisson.x`` application on a $512^3$ grid?
 
 5. For the ``apply_stencil3d`` operation, try interchanging the three nested loops, and run the code sequentially (set ``OMP_NUM_THREADS=1``).
-   Which loop order is best, and why? 
+   Which loop order is best, and why? In case you stored the matrix entries in task 1, change the order in which they are accessed in ``apply_stencil3d``.
 
 6. Run the main_cg_poisson.x driver. Do you observe a performance difference when solving a $`1024 \times 128 \times 128`$ or a $`128 \times 128 \times 1024`$ problem on 8 cores? Add the ``collapse(3)`` clause to the OpenMP pragma line in ``apply_stencil3d`` and run again.
 Explain your observations.
@@ -83,4 +86,4 @@ the number of stages/loops? Implement your own version of the algorithm with few
 
 ## Optional bonus task
 
-8. Make your basic operations run on the GPU using OpenMP ``target`` directives or C++20 (see [this repository](https://gitlab.tudelft.nl/dhpc/training/cxx-examples) for C++20 examples). Use the nvhpc compilers and the DelftBlue GPU nodes, as illustrated in that repo. Are all your tests still passing? Is the CG solver working correctly? And how fast is it on a V100s GPU compared to a standard compute node?
+8. Make your basic operations run on the GPU using OpenMP ``target`` directives or C++20 (see [this repository](https://gitlab.tudelft.nl/dhpc/training/cxx-examples) for C++20 examples). Use the nvhpc compilers and the DelftBlue GPU nodes, as illustrated in that repo. Are all your tests still passing? Is the CG solver working correctly? And how fast is it on a V100s GPU compared to a standard compute node? A ``data`` statement in the outer CG scope can be used to make this run more efficient...
