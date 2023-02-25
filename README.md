@@ -71,7 +71,7 @@ does not have this branch for your NetID, contact ``j.thies@tudelft.nl``.
    You may find the ``Timer`` object useful, defined in ``timer.hpp``.
    For the individual operations from task 1,
    perform weak and strong scaling experiments on a DelftBlue node (using up to 48 cores). Include plots in your report, and interpret them.
-   To run these jobs, modify the commands in the jobscript ``run_benchmarks.slurm`` to your needs, but leave the SBATCH lines unchanged.
+   To run these jobs, modify the commands in the jobscript ``run_cg_poisson.slurm`` to your needs, but leave the SBATCH lines unchanged.
    How many cores are optimal for the ``main_cg_poisson.x`` application on a $512^3$ grid?
 
 5. For the ``apply_stencil3d`` operation, try interchanging the three nested loops, and run the code sequentially (set ``OMP_NUM_THREADS=1``).
