@@ -1,5 +1,6 @@
 #include "operations.hpp"
 #include "cg_solver.hpp"
+#include "timer.hpp"
 
 #include <iostream>
 #include <cmath>
@@ -111,5 +112,8 @@ int main(int argc, char* argv[])
   }
   delete [] x;
   delete [] b;
+
+  Timer::summarize();
+
   return 0;
 }
