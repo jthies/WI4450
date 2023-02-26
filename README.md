@@ -43,7 +43,8 @@ Include the report in PDF format in your submission (see below).
 - Add the final report as a PDF file (you may keep a LaTeX file or other source file in the repository, too).
 - Push your latest version of the ``<netid>`` branch to your forked repo
 - Create a merge request, using ``<netid>`` as both the source and target branch. If the original repository
-does not have this branch for your NetID, contact ``j.thies@tudelft.nl``.
+does not have this branch for your NetID, create an issue to request it
+in the [issue tracker](https://gitlab.tudelft.nl/dhpc/sticse-hpc/homework1/issues/)..
 
 ## Your Tasks
 
