@@ -6,6 +6,7 @@
 #SBATCH -c 48
 #SBATCH --mem=0
 #SBATCH --account=Education-EEMCS-Courses-WI4450
+#SBATCH --reservation=subnumatest
 
 # run CG for a n^3 Poisson problem
 n=128
