@@ -34,7 +34,7 @@ Include the report in PDF format in your submission (see below).
 ### Working with the repository
 
 - Before you start, fork the repository into your personal gitlab space.
-- clone the repository on DelftBlue using ``git clone https://gitlab.tudelft.nl/<netid>/homework1``.
+- clone the repository on DelftBlue using ``git clone https://gitlab.tudelft.nl/sticse-hpc/homework1``.
 - create a branch ``<netid>`` and work on this branch.
 - regularly push your work to the forked repository to avoid losing something
 
