@@ -78,13 +78,13 @@ int main(int argc, char* argv[])
 
   // initialize the rhs with f(x,y,z) in the interior of the domain
 #pragma omp parallel for schedule(static)
-  for (int k=1; k<nz-1; k++)
+  for (int k=0; k<nz; k++)
   {
     double z = k*dz;
-    for (int j=1; j<ny-1; j++)
+    for (int j=0; j<ny; j++)
     {
       double y = j*dy;
-      for (int i=1; i<nx-1; i++)
+      for (int i=0; i<nx; i++)
       {
         double x = i*dx;
         int idx = L.index_c(i,j,k);
