@@ -3,6 +3,7 @@
 #include <string>
 #include <iostream>
 #include <map>
+#include <chrono>
 
 // This class takes a time stamp when created
 // and when deleted, and stores internally a
@@ -16,7 +17,7 @@
 //
 // void foo()
 // {
-//    Timer("foo");
+//    Timer timer("foo");
 //    (do some work)
 //  }
 //
