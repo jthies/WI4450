@@ -79,7 +79,7 @@ void apply_stencil3d(stencil3d const* S,
 	  if (k + 1 < S->nz)
 	  {
 	    v[S->index_b(i,j,k)] += S->value_b * u[S->index_b(i,j,k)];
-	  }
+          }
       }
     }
   }
