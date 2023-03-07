@@ -20,7 +20,7 @@ TEST_SOURCES=test_operations.cpp test_cg_solver.cpp
 MAIN_OBJ=main_cg_poisson.o cg_solver.o operations.o timer.o
 
 run_tests.x: run_tests.cpp ${TEST_SOURCES} gtest_mpi.o operations.o cg_solver.o
-	${CXX} ${CXX_FLAGS} ${DEFS} -o run_tests.x $^
+	${CXX} ${CXX_FLAGS} ${DEFS} -o run_tests.x $^ 
 
 main_cg_poisson.x: ${MAIN_OBJ}
 	${CXX} ${CXX_FLAGS} ${DEFS} -o main_cg_poisson.x $^
