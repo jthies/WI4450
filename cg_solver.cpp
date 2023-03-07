@@ -26,12 +26,16 @@ void cg_solver(stencil3d const* op, int n, double* x, double const* b,
 
   // r = op * x
   // [...]
+  apply_stencil3d(op, x, r);
 
   // r = b - r;
   // [...]
+  axpby(n, 1, b, -1, r);
 
   // p = q = 0
   // [...]
+  init(n,p,0);
+  init(n,q,0);
 
   // start CG iteration
   int iter = -1;
@@ -41,6 +45,7 @@ void cg_solver(stencil3d const* op, int n, double* x, double const* b,
 
     // rho = <r, r>
     // [...]
+    rho = dot(n,r,r);
 
     if (verbose)
     {
@@ -63,21 +68,25 @@ void cg_solver(stencil3d const* op, int n, double* x, double const* b,
     }
     // p = r + alpha * p
     // [...]
+    axpby(n, 1, r, alpha, p);
 
     // q = op * p
     // [...]
+    apply_stencil3d(op, p, q);
 
     // beta = <p,q>
     // [...]
+    beta = dot(n,p,q);
 
     alpha = rho / beta;
 
     // x = x + alpha * p
     // [...]
+    axpby(n,alpha,p,1,x);
 
     // r = r - alpha * q
     // [...]
-
+    axpby(n,-alpha, q, 1, r);
     std::swap(rho_old, rho);
   }// end of while-loop
 
