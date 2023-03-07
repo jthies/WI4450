@@ -3,7 +3,10 @@
 
 void init(int n, double* x, double value)
 {
-  // [...]
+  for (int i=0; i<n; i++){
+    x[i]=value;
+  }
+  
   return;
 }
 
