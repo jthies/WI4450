@@ -69,6 +69,27 @@ TEST(operations, dot) {
   EXPECT_NEAR(res, (double)n, n*std::numeric_limits<double>::epsilon());
 }
 
+TEST(operations, axpby) {
+  const int n=150;
+  double x[n], y[n];
+
+  for (int i=0; i<n; i++)
+  {
+    x[i] = double(i+1);
+    y[i] = double(n-i-1);
+  }
+
+  double a = 42.0;
+  double b = a;
+  axpby(n, a, x, b, y);
+
+  double err=0.0;
+
+  for (int i=0; i<n; i++) err = std::max(err, std::abs(y[i]-a*n));
+
+  EXPECT_NEAR(1.0+err, 1.0, std::numeric_limits<double>::epsilon());
+}
+
 TEST(operations,stencil3d_symmetric)
 {
 //  const int nx=3, ny=4, nz=5;
