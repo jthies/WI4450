@@ -33,7 +33,7 @@ void axpby(int n, double a, double const* x, double b, double* y)
 void apply_stencil3d(stencil3d const* S,
         double const* u, double* v)
 {
-  init((S->nx)*(S->ny)*(S->nz), v, 0);
+  init((S->nx)*(S->ny)*(S->nz), v, 0.0);
 
   for (int i=0; i<S->nx; i++){
     for (int j=0; j<S->ny; j++){
