@@ -9,7 +9,7 @@
 #SBATCH --reservation=subnumatest
 
 # run CG for a n^3 Poisson problem
-n=128
-export OMP_NUM_THREADS=12
-srun ./main_benchmarks.x $n >> results_benchmarks$n.out
-srun ./main_cg_poisson.x $n >> results_cg_poisson$n.out
+n=1024
+export OMP_NUM_THREADS=96
+srun ./main_benchmarks.x $n >> results_benchmarks$OMP_NUM_THREADS$n.out
+srun ./main_cg_poisson.x $n >> results_cg_poisson$OMP_NUM_THREADS$n.out
