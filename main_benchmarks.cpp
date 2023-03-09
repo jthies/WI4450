@@ -2,28 +2,6 @@
 #include "timer.hpp"
 #include<iostream>
 
-
-
-void strongScaling_fitting(double s, int N)
-{
-  double speedUp;
-  //double s;
-  double p;
-
-  p = 1 - s;
-  speedUp = 1 / (s + p / N); //Amdahl's law
-}
-
-void weakScaling_fitting(double s, int N)
-{
-  double speedUp;
-  //double s;
-  double p;
-
-  p = 1 - s;
-  speedUp = s + p * N; //Gustafson's law
-}
-
 int main(int argc, char* argv[])
 {
   int nx, ny, nz;
