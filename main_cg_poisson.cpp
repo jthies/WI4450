@@ -51,68 +51,74 @@ stencil3d laplace3d_stencil(int nx, int ny, int nz)
 
 int main(int argc, char* argv[])
 {
-  int nx, ny, nz;
+  {
+    Timer t("main");
+    int nx, ny, nz;
 
-  if      (argc==1) {nx=128;           ny=128;           nz=128;}
-  else if (argc==2) {nx=atoi(argv[1]); ny=nx;            nz=nx;}
-  else if (argc==4) {nx=atoi(argv[1]); ny=atoi(argv[2]); nz=atoi(argv[3]);}
-  else {std::cerr << "Invalid number of arguments (should be 0, 1 or 3)"<<std::endl; exit(-1);}
-  if (ny<0) ny=nx;
-  if (nz<0) nz=nx;
+    if      (argc==1) {nx=128;           ny=128;           nz=128;}
+    else if (argc==2) {nx=atoi(argv[1]); ny=nx;            nz=nx;}
+    else if (argc==4) {nx=atoi(argv[1]); ny=atoi(argv[2]); nz=atoi(argv[3]);}
+    else {std::cerr << "Invalid number of arguments (should be 0, 1 or 3)"<<std::endl; exit(-1);}
+    if (ny<0) ny=nx;
+    if (nz<0) nz=nx;
 
-  // total number of unknowns
-  int n=nx*ny*nz;
+    // total number of unknowns
+    int n=nx*ny*nz;
 
-  double dx=1.0/(nx-1), dy=1.0/(ny-1), dz=1.0/(nz-1);
+    double dx=1.0/(nx-1), dy=1.0/(ny-1), dz=1.0/(nz-1);
 
-  // Laplace operator
-  stencil3d L = laplace3d_stencil(nx,ny,nz);
+    // Laplace operator
+    stencil3d L = laplace3d_stencil(nx,ny,nz);
 
-  // solution vector: start with a 0 vector
-  double *x = new double[n];
-  init(n, x, 0.0);
+    // solution vector: start with a 0 vector
+    double *x = new double[n];
+    init(n, x, 0.0);
 
-  // right-hand side
-  double *b = new double[n];
-  init(n, b, 0.0);
+    // right-hand side
+    double *b = new double[n];
+    init(n, b, 0.0);
 
   // initialize the rhs with f(x,y,z) in the interior of the domain
-#pragma omp parallel for schedule(static)
-  for (int k=0; k<nz; k++)
-  {
-    double z = k*dz;
-    for (int j=0; j<ny; j++)
+    #pragma omp parallel for schedule(static)
+    for (int k=0; k<nz; k++)
     {
-      double y = j*dy;
-      for (int i=0; i<nx; i++)
+      double z = k*dz;
+      for (int j=0; j<ny; j++)
       {
-        double x = i*dx;
-        int idx = L.index_c(i,j,k);
-        b[idx] = f(x,y,z);
+        double y = j*dy;
+        for (int i=0; i<nx; i++)
+        {
+          double x = i*dx;
+          int idx = L.index_c(i,j,k);
+          b[idx] = f(x,y,z);
+        }
       }
     }
-  }
-  // Dirichlet boundary conditions at z=0 (others are 0 in our case, initialized above)
-  for (int j=0; j<ny; j++)
-    for (int i=0; i<nx; i++)
+    // Dirichlet boundary conditions at z=0 (others are 0 in our case, initialized above)
+    for (int j=0; j<ny; j++)
+      for (int i=0; i<nx; i++)
+      {
+        b[L.index_c(i,j,0)] -= g_0(i*dx, j*dy)/(dz*dz);
+      }
+
+    // solve the linear system of equations using CG
+    int numIter, maxIter=500;
+    double resNorm, tol=std::sqrt(std::numeric_limits<double>::epsilon());
+
+    try
     {
-      b[L.index_c(i,j,0)] -= g_0(i*dx, j*dy)/(dz*dz);
+      {
+        Timer t("cg_solver");
+        cg_solver(&L, n, x, b, tol, maxIter, &resNorm, &numIter);
+      }
+    } catch(std::exception e)
+    {
+      std::cerr << "Caught an exception in cg_solve: " << e.what() << std::endl;
+      exit(-1);
     }
-
-  // solve the linear system of equations using CG
-  int numIter, maxIter=500;
-  double resNorm, tol=std::sqrt(std::numeric_limits<double>::epsilon());
-
-  try {
-  cg_solver(&L, n, x, b, tol, maxIter, &resNorm, &numIter);
-  } catch(std::exception e)
-  {
-    std::cerr << "Caught an exception in cg_solve: " << e.what() << std::endl;
-    exit(-1);
+    delete [] x;
+    delete [] b;
   }
-  delete [] x;
-  delete [] b;
-
   Timer::summarize();
 
   return 0;
