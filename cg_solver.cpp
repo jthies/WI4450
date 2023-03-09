@@ -1,4 +1,3 @@
-
 #include "cg_solver.hpp"
 #include "operations.hpp"
 
@@ -30,12 +29,12 @@ void cg_solver(stencil3d const* op, int n, double* x, double const* b,
 
   // r = b - r;
   // [...]
-  axpby(n, 1, b, -1, r);
+  axpby(n, 1.0, b, -1.0, r);
 
   // p = q = 0
   // [...]
-  init(n,p,0);
-  init(n,q,0);
+  init(n,p,0.0);
+  init(n,q,0.0);
 
   // start CG iteration
   int iter = -1;
@@ -68,7 +67,7 @@ void cg_solver(stencil3d const* op, int n, double* x, double const* b,
     }
     // p = r + alpha * p
     // [...]
-    axpby(n, 1, r, alpha, p);
+    axpby(n, 1.0, r, alpha, p);
 
     // q = op * p
     // [...]
@@ -82,11 +81,11 @@ void cg_solver(stencil3d const* op, int n, double* x, double const* b,
 
     // x = x + alpha * p
     // [...]
-    axpby(n,alpha,p,1,x);
+    axpby(n,alpha,p,1.0,x);
 
     // r = r - alpha * q
     // [...]
-    axpby(n,-alpha, q, 1, r);
+    axpby(n,-alpha, q, 1.0, r);
     std::swap(rho_old, rho);
   }// end of while-loop
 
