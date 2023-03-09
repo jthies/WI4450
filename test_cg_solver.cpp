@@ -32,12 +32,15 @@ TEST(cg_example, identity)
   S.value_b = 0;
   S.value_t = 0;
 
-  init(n, x, 1.0); init(n, b, 2.0); cg_solver(&S, n, x, b, tol, maxIter, &resNorm, &numIter);
-  if (numIter < maxIter)
-    EXPECT_NEAR(0.0, resNorm, tol);
-  else
-    std::cout<<"Reached maximum number of iterations"<<std::endl;
-  std::cout<<"matrix3d is a idenity matrix and b is a vector with all elements equal to 2"<<std::endl;
+  init(n, x, 1.0); 
+  init(n, b, 2.0);
+  cg_solver(&S, n, x, b, tol, maxIter, &resNorm, &numIter);
+  if (resNorm >= tol && numIter >= maxIter)
+  {
+    std::cout<<"Maximum number of iterations reached, Residual norm = " <<resNorm<<" >= " << tol << " = Tolerance: convergence not reached"<<std::endl;
+  }
+  else EXPECT_NEAR(0.0, resNorm, tol);
+  std::cout<<"matrix3d is a identity matrix and b is a vector with all elements equal to 2"<<std::endl;
   std::cout<<"cg value for x, "<< "true value for x"<<std::endl;
   for (int i=0; i<n; i++) std::cout<<x[i]<<", 2 "<<std::endl;
 
@@ -69,11 +72,11 @@ TEST(cg_example, stencil)
   init(n, x, 1.0);
   init(n, b, 0.0);
   cg_solver(&S, n, x, b, tol, maxIter, &resNorm, &numIter);
-  if (numIter < maxIter)
-    EXPECT_NEAR(0.0, resNorm, tol);
-  else
-    std::cout<<"Reached maximum number of iterations"<<std::endl;
-
+  if (resNorm >= tol && numIter >= maxIter)
+  {
+    std::cout<<"Maximum number of iterations reached, Residual norm = " <<resNorm<<" >= " << tol << " = Tolerance: convergence not reached"<<std::endl;
+  }
+  else EXPECT_NEAR(0.0, resNorm, tol);
   delete [] x;
   delete [] b;
 }
