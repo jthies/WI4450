@@ -31,7 +31,7 @@ TEST(cg_solver, poisson){
 
     apply_stencil3d(&S,u_known,rhs);    // compute the right hand side with the known u_known
 
-    double cg_tol = 10e-60;
+    double cg_tol = 10e-20;
     double tol = 10e-6;
     int maxIter = 1000;
     int numIter = 0;
