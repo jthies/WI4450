@@ -1,7 +1,7 @@
 #include "gtest_mpi.hpp"
 
 #include "operations.hpp"
-#include "cg_solver.cpp"
+#include "cg_solver.hpp"
 
 #include <iostream>
 #include <cmath>
