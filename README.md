@@ -33,17 +33,17 @@ Include the report in PDF format in your submission (see below).
 
 ### Working with the repository
 
-- Clone the repository on DelftBlue using ``git clone https://gitlab.tudelft.nl/<netid>/homework1``.
-- Create a branch ``<netid>`` and work on this branch (or simply ``git checkout <netid>`` if it already exists).
-- regularly push your work to the repository to avoid losing something
+- Before you start, fork the repository into your personal gitlab space.
+- clone the repository on DelftBlue using ``git clone https://gitlab.tudelft.nl/<netid>/homework1``.
+- create a branch ``<netid>`` and work on this branch.
+- regularly push your work to the forked repository to avoid losing something
 
 ### Submission
 
 - Add the final report as a PDF file (you may keep a LaTeX file or other source file in the repository, too).
-- Push your latest version of the ``<netid>`` branch
-- Create a merge request, using ``<netid>`` as the source and ``<netid>-submission`` as the target branch. If the latter
-branch does not have this branch for your NetID, create an issue to request it
-in the [issue tracker](https://gitlab.tudelft.nl/dhpc/sticse-hpc/homework1/issues/).
+- Push your latest version of the ``<netid>`` branch to your forked repo
+- Create a merge request, using ``<netid>`` as both the source and target branch. If the original repository
+does not have this branch for your NetID, contact ``j.thies@tudelft.nl``.
 
 ## Your Tasks
 
