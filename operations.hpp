@@ -69,9 +69,9 @@ typedef struct stencil3d
   //return the position in a vector where grid cell (i-1,j,k) is located
   inline int index_w(int i, int j, int k) const {return index_c(i-1, j,   k);};
   //return the position in a vector where grid cell (i,j,k+1) is located
-  inline int index_b(int i, int j, int k) const {return index_c(i,   j, k+1);};
+  inline int index_b(int i, int j, int k) const {return index_c(i,   j, k-1);};
   //return the position in a vector where grid cell (i,j,k-1) is located
-  inline int index_t(int i, int j, int k) const {return index_c(i,   j, k-1);};
+  inline int index_t(int i, int j, int k) const {return index_c(i,   j, k+1);};
 
 } stencil3d;
 
