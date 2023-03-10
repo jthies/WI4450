@@ -3,6 +3,7 @@
 
 void init(int n, double* x, double value)
 {
+  #pragma omp parallel for
   for (int i=0; i<n; i++){
     x[i]=value;
   }
@@ -12,7 +13,8 @@ void init(int n, double* x, double value)
 
 double dot(int n, double const* x, double const* y)
 {
-  double dot_product = 0;
+  double dot_product = 0.0;
+  #pragma omp parallel for reduction(+: dot_product)
   for (int i=0; i<n; i++){
     dot_product += x[i]*y[i];
   }
@@ -22,6 +24,7 @@ double dot(int n, double const* x, double const* y)
 
 void axpby(int n, double a, double const* x, double b, double* y)
 {
+  #pragma omp parallel for
   for (int i=0; i<n; i++){
     y[i] = a*x[i] + b*y[i];
   }
@@ -35,6 +38,7 @@ void apply_stencil3d(stencil3d const* S,
 {
   init((S->nx)*(S->ny)*(S->nz), v, 0.0);
 
+  #pragma omp parallel for collapse(3)
   for (int i=0; i<S->nx; i++){
     for (int j=0; j<S->ny; j++){
       for (int k=0; k<S->nz; k++){

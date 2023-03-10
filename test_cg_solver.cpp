@@ -7,18 +7,18 @@
 #include <cmath>
 
 TEST(cg_solver, poisson){
-    const int nx=4, ny=4, nz=4;     // define dimensions
+    const int nx=10, ny=8, nz=6;    // define dimensions
     const int n=nx*ny*nz;           // define length vector
     double* rhs=new double[n];      // define right hand side vector
     double* u_known=new double[n];  // define solution vector
     double* u=new double[n];        // define solution vector
 
     for (int i=0;i<n;i++){      
-        u_known[i] = i%2;   // solution is known
-        u[i] = 1.0;         // starting vector
+        u_known[i] = i%3;   // solution is known
+        u[i] = 1.0;         // starting vector for the conjugate gradient method
     }
 
-    stencil3d S;
+    stencil3d S;            // create a symmetric operation
 
     S.nx=nx; S.ny=ny; S.nz=nz;
     S.value_c = 6;
@@ -37,7 +37,7 @@ TEST(cg_solver, poisson){
     int numIter = 0;
     double resNorm = 10e6;
 
-    cg_solver(&S, n, u, rhs, cg_tol, maxIter, &resNorm, &numIter,0);
+    cg_solver(&S, n, u, rhs, cg_tol, maxIter, &resNorm, &numIter,1);
 
     double err=0.0;
 
