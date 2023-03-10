@@ -41,12 +41,12 @@ void apply_stencil3d(stencil3d const* S,
 {
   // [...]
   //v=S*u
-  #pragma omp parallel for schedule(static)
-  for (int i = 0; i < S->nx; i++)
+  #pragma omp parallel for schedule(static) collapse(3)
+  for (int k = 0; k < S->nz; k++)
   {
     for (int j = 0; j < S->ny; j++)
     {
-      for (int k = 0; k < S->nz; k++)
+      for (int i = 0; i < S->nx; i++)
       {
 	  //grid i,j,k
 	  v[S->index_c(i,j,k)] = S->value_c * u[S->index_c(i,j,k)];
