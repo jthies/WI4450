@@ -7,15 +7,15 @@
 #include <cmath>
 
 TEST(cg_solver, poisson){
-    const int nx=4, ny=4, nz=4; // define dimensions
-    const int n=nx*ny*nz;       // define length vector
-    double* rhs=new double[n];  // define right hand side vector
-    double* u_known=new double[n];    // define solution vector
-    double* u=new double[n];    // define solution vector
+    const int nx=4, ny=4, nz=4;     // define dimensions
+    const int n=nx*ny*nz;           // define length vector
+    double* rhs=new double[n];      // define right hand side vector
+    double* u_known=new double[n];  // define solution vector
+    double* u=new double[n];        // define solution vector
 
     for (int i=0;i<n;i++){      
-        u_known[i] = i%2; // solution is known
-        u[i] = 1.0;             // starting vector
+        u_known[i] = i%2;   // solution is known
+        u[i] = 1.0;         // starting vector
     }
 
     stencil3d S;
@@ -29,7 +29,7 @@ TEST(cg_solver, poisson){
     S.value_b = -1;
     S.value_t = -1;
 
-    apply_stencil3d(&S,u_known,rhs);
+    apply_stencil3d(&S,u_known,rhs);    // compute the right hand side with the known u_known
 
     double cg_tol = 10e-60;
     double tol = 10e-6;
