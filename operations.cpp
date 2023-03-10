@@ -33,16 +33,13 @@ void apply_stencil3d(stencil3d const* S,
   int nx=S->nx, ny=S->ny, nz=S->nz;
   double ele; // value of v[S->index_c(i,j,k)]
   
-  #pragma omp parallel for reduction(+:ele)
+  #pragma omp parallel for collapse(3) reduction(+:ele)
   for (int k=0; k<nz; k++) 
      for (int j=0; j<ny; j++)
-        for(int i=0; i<nx; i++)
- // for (int i=0; i<nx; i++)
- //   for (int j=0; j<ny; j++)
- //     for(int k=0; k<nz; k++) 
+        for(int i=0; i<nx; i++) 
 	{
 	   ele  = S->value_c * u[S->index_c(i,j,k)];
-	
+
            if (i==0||i==nx-1) 
 	      ele += (i==0) ? 
 	         (u[S->index_e(i,j,k)] * S->value_e): 
@@ -59,14 +56,11 @@ void apply_stencil3d(stencil3d const* S,
 	      ele += u[S->index_n(i,j,k)]*S->value_n + 
 			    u[S->index_s(i,j,k)]*S->value_s; 	
 
-	   /*I think index_b and index_t defined in operations.hpp is incorrect
-	    * b and t should be reversed
-	    * discuss this with Jonas!
-	    * */ 
+	  
            if (k==0||k==nz-1) 
 	      ele += (k==0) ? 
-	         (u[S->index_b(i,j,k)] * S->value_b): 
-		 (u[S->index_t(i,j,k)] * S->value_t);  
+	         (u[S->index_t(i,j,k)] * S->value_t): 
+		 (u[S->index_b(i,j,k)] * S->value_b);  
 	   else 
 	      ele += u[S->index_t(i,j,k)]*S->value_t + 
 		            u[S->index_b(i,j,k)]*S->value_b; 	
