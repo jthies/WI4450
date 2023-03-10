@@ -63,7 +63,7 @@ void apply_stencil3d(stencil3d const* S,
 	  //grid i,j,k-1
 	  if (k > 0)
 	  {
-	    v[S->index_t(i,j,k)] += S->value_t * u[S->index_t(i,j,k)];
+	    v[S->index_b(i,j,k)] += S->value_b * u[S->index_b(i,j,k)];
 	  }
 	  //grid i+1,j,k
 	  if (i + 1 < S->nx)
@@ -78,7 +78,7 @@ void apply_stencil3d(stencil3d const* S,
 	  //grid i,j,k+1
 	  if (k + 1 < S->nz)
 	  {
-	    v[S->index_b(i,j,k)] += S->value_b * u[S->index_b(i,j,k)];
+	    v[S->index_t(i,j,k)] += S->value_t * u[S->index_t(i,j,k)];
           }
       }
     }
