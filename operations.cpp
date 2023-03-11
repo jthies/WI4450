@@ -43,7 +43,7 @@ void apply_stencil3d(stencil3d const* S,
     for (int j=0; j<S->ny; j++){
       for (int k=0; k<S->nz; k++){
         
-        v[S->index_c(i,j,k)] += S->value_c * u[S->index_c(i,j,k)];
+        v[S->index_c(i,j,k)] = S->value_c * u[S->index_c(i,j,k)];
 
         if (i != 0)       {v[S->index_c(i,j,k)] += S->value_w * u[S->index_w(i,j,k)];}
         if (i != S->nx-1) {v[S->index_c(i,j,k)] += S->value_e * u[S->index_e(i,j,k)];}
