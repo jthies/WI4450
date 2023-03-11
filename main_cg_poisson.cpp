@@ -51,6 +51,7 @@ stencil3d laplace3d_stencil(int nx, int ny, int nz)
 
 int main(int argc, char* argv[])
 {
+  {Timer t("main");
   int nx, ny, nz;
 
   if      (argc==1) {nx=128;           ny=128;           nz=128;}
@@ -104,6 +105,7 @@ int main(int argc, char* argv[])
   double resNorm, tol=std::sqrt(std::numeric_limits<double>::epsilon());
 
   try {
+  Timer t("cg_solver");
   cg_solver(&L, n, x, b, tol, maxIter, &resNorm, &numIter);
   } catch(std::exception e)
   {
@@ -112,7 +114,7 @@ int main(int argc, char* argv[])
   }
   delete [] x;
   delete [] b;
-
+  }
   Timer::summarize();
 
   return 0;
