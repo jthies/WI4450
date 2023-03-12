@@ -1,5 +1,5 @@
 
-#include "cg_solver.hpp"
+#include "pcg_solver.hpp"
 #include "operations.hpp"
 
 #include <cmath>
@@ -7,8 +7,9 @@
 
 #include <iostream>
 #include <iomanip>
+#include <omp.h>
 
-void cg_solver(stencil3d const* op, int n, double* x, double const* b,
+void pcg_solver(stencil3d const* op, int n, double* x, double const* b,
         double tol, int maxIter,
         double* resNorm, int* numIter,
         int verbose)
@@ -17,6 +18,8 @@ void cg_solver(stencil3d const* op, int n, double* x, double const* b,
   {
     throw std::runtime_error("mismatch between stencil and vector dimension passed to cg_solver");
   }
+  
+  int num_procs = omp_get_max_threads(); 
 
   double *p = new double[n];
   double *q = new double[n];
@@ -36,54 +39,65 @@ void cg_solver(stencil3d const* op, int n, double* x, double const* b,
   init(n, q, 0.0);
 
   // start CG iteration
-  int iter = -1;
-  while (true)
-  {
-    iter++;
 
-    // rho = <r, r>
-    rho = dot(n,r,r);
+  #pragma omp parallel for
+  for (int proc=0; proc<num_procs; proc++){
+    #pragma omp task
+       {
+          #pragma omp critical
+          {
+            int iter = -1;
+            while (true)
+            {
+              iter++;
 
-    if (verbose)
-    {
-      std::cout << std::setw(4) << iter << "\t" << std::setw(8) << std::setprecision(4) << sqrt(rho) << std::endl;
-      // std::cout << std::setprecision(4) << rho << ","; // if you want to plot it in python
-    }
+              // rho = <r, r>
+              rho = dot(n,r,r);
 
-    // check for convergence or failure
-    
-    if ((std::sqrt(rho) < tol) || (iter > maxIter))
-    {
-      break;
-    }
+              if (verbose)
+              {
+                std::cout << std::setw(4) << iter << "\t" << std::setw(8) << std::setprecision(4) << sqrt(rho) << std::endl;
+                // std::cout << std::setprecision(4) << rho << ","; // if you want to plot it in python
+              }
 
-    if (rho_old==0.0)
-    {
-      alpha = 0.0;
-    }
-    else
-    {
-      alpha = rho / rho_old;
-    }
-    // p = r + alpha * p
-    axpby(n, 1.0, r, alpha, p);
+              // check for convergence or failure
+              
+              if ((std::sqrt(rho) < tol) || (iter > maxIter))
+              {
+                break;
+              }
 
-    // q = op * p
-    apply_stencil3d(op, p, q);
+              if (rho_old==0.0)
+              {
+                alpha = 0.0;
+              }
+              else
+              {
+                alpha = rho / rho_old;
+              }
+              // p = r + alpha * p
+              axpby(n, 1.0, r, alpha, p);
 
-    // beta = <p,q>
-    beta = dot(n, p, q);
+              // q = op * p
+              apply_stencil3d(op, p, q);
 
-    alpha = rho / beta;
+              // beta = <p,q>
+              beta = dot(n, p, q);
 
-    // x = x + alpha * p
-    axpby(n, alpha, p, 1.0, x);
+              alpha = rho / beta;
 
-    // r = r - alpha * q
-    axpby(n, -alpha, q, 1.0, r);
+              // x = x + alpha * p
+              axpby(n, alpha, p, 1.0, x);
 
-    std::swap(rho_old, rho);
-  }// end of while-loop
+              // r = r - alpha * q
+              axpby(n, -alpha, q, 1.0, r);
+
+              std::swap(rho_old, rho);
+            }// end of while-loop
+          }
+       }
+  }
+  #pragma omp taskwait
 
   // clean up
   delete [] p;
