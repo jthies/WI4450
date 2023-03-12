@@ -9,7 +9,7 @@
 #include <cmath>
 
 // Main program that solves the 3D Poisson equation
-// on a unit cube. The grid size (nx,ny,nz) can be 
+// on a unit cube. The grid size (nx,ny,nz) can be
 // passed to the executable like this:
 //
 // ./main_cg_poisson <nx> <ny> <nz>
@@ -102,7 +102,7 @@ int main(int argc, char* argv[])
       }
 
     // solve the linear system of equations using CG
-    int numIter, maxIter=1000;
+    int numIter, maxIter=500;
     double resNorm, tol=std::sqrt(std::numeric_limits<double>::epsilon());
 
     try
@@ -110,6 +110,7 @@ int main(int argc, char* argv[])
       {
         Timer t("cg_solver");
         cg_solver(&L, n, x, b, tol, maxIter, &resNorm, &numIter);
+        std::cout<<"x[0] = "<<x[0]<<", x["<<n/2<<"] = "<<x[n/2]<< ", x["<<n-1<<"] = "<<x[n-1]<<std::endl;
       }
     } catch(std::exception e)
     {
