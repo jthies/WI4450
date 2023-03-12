@@ -151,6 +151,7 @@ TEST(operations,stencil3d_positive_definite)
   int wrong_entries=0;
   for (int i=0; i<n; i++)
   {
+    sum_row = 0.0;
     d = A[i*n+i];
     if (d <= 0.0) wrong_entries++;
 
