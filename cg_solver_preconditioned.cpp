@@ -18,7 +18,7 @@ void precond_cg_solver(stencil3d const* op, int n, double* x, double const* b,
     throw std::runtime_error("mismatch between stencil and vector dimension passed to cg_solver");
   }
   //double trace = n * op->value_c;
-  stencil3d invM;
+  /*stencil3d invM;
   invM.nx = op->nx; invM.ny = op->ny; invM.nz = op->nz;
   invM.value_c = 1.0/(op->value_c);//(op->value_c)/trace;//(op->value_c)/trace;
   invM.value_n = 0.0;
@@ -27,7 +27,7 @@ void precond_cg_solver(stencil3d const* op, int n, double* x, double const* b,
   invM.value_w = 0.0;//-(op->value_w)/(op->value_c)*(op->value_w)/trace; //-(op->value_w)/trace;
   invM.value_t = 0.0;
   invM.value_b = 0.0;//-(op->value_b)/(op->value_c)*(op->value_b)/trace; //-(op->value_b)/trace;
-
+  */
   double *p = new double[n];
   double *q = new double[n];
   double *r = new double[n];
@@ -52,9 +52,8 @@ void precond_cg_solver(stencil3d const* op, int n, double* x, double const* b,
   {
     iter++;
     //solve Mz = r, Gauss-Seidel preconditioner
-    //z = invM r
-    apply_stencil3d(&invM, r, z);
-
+    //z = s*r, s=1.0/op->value_c
+    apply_diagonalMatrix(n, 1.0/op->value_c, r, z);
     // rho = <r, r>
     // [...]
     rho = dot(n,r,z);
