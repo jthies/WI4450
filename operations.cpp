@@ -42,7 +42,7 @@ void apply_stencil3d(stencil3d const* S,
   // [...]
   //v=S*u
   double sum;
-  #pragma omp parallel for reduction(+:sum)//collapse(3)
+  #pragma omp parallel for reduction(+:sum) collapse(3)
   for (int k = 0; k < S->nz; k++)
   {
     for (int j = 0; j < S->ny; j++)
