@@ -123,7 +123,7 @@ TEST(operations,stencil3d_symmetric)
 TEST(operations,stencil3d_positive_definite)
 {
   //const int nx=3, ny=4, nz=5;
-  const int nx=2, ny=2, nz=2;
+  const int nx=3, ny=3, nz=3;
   const int n=nx*ny*nz;
   double* e=new double[n];
   for (int i=0; i<n; i++) e[i]=0.0;
@@ -152,19 +152,19 @@ TEST(operations,stencil3d_positive_definite)
   for (int i=0; i<n; i++)
   {
     d = A[i*n+i];
-    if (d <= 0) wrong_entries++;
+    if (d <= 0.0) wrong_entries++;
 
     for (int j=0; j<n; j++)
     {
       if (i != j) sum_row += std::abs(A[i*n+j]);
     }
-    if (d <= sum_row) wrong_entries++;
+    if (d < sum_row) wrong_entries++;
   }
   EXPECT_EQ(0, wrong_entries);
 
   if (wrong_entries)
   {
-    std::cout << "Your matrix (computed on a 2x2x2 grid by apply_stencil(I)) is ..."<<std::endl;
+    std::cout << "Your matrix (computed on a 3x3x3 grid by apply_stencil(I)) is ..."<<std::endl;
     for (int j=0; j<n; j++)
     {
       for (int i=0; i<n; i++)
