@@ -1,5 +1,5 @@
 #include "operations.hpp"
-#include <omp.h>
+#include <omp.h> 
 
 void init(int n, double* x, double value)
 {

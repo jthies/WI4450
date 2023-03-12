@@ -133,13 +133,13 @@ TEST(operations,stencil3d_positive_definite)
   stencil3d S;
 
   S.nx=nx; S.ny=ny; S.nz=nz;
-  S.value_c = 8;
-  S.value_n = 2;
-  S.value_e = 4;
-  S.value_s = 2;
-  S.value_w = 4;
-  S.value_b = 1;
-  S.value_t = 1;
+  S.value_c = 6.0;
+  S.value_n = -1.0;
+  S.value_e = -1.0;
+  S.value_s = -1.0;
+  S.value_w = -1.0;
+  S.value_b = -1.0;
+  S.value_t = -1.0;
 
   for (int i=0; i<n; i++)
   {
