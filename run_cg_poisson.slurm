@@ -9,8 +9,11 @@
 #SBATCH --reservation=subnumatest
 
 # run CG for a n^3 Poisson problem
-n=64
-export OMP_NUM_THREADS=4
-srun ./main_benchmarks.x $n >> results_benchmarks$OMP_NUM_THREADS$n.out
-srun ./main_cg_poisson.x $n >> results_cg_poisson$OMP_NUM_THREADS$n.out
+nx=128
+ny=128
+nz=128
+export OMP_NUM_THREADS=8
+srun ./main_benchmarks.x $nx $ny $nz >> results_benchmarks_perf$OMP_NUM_THREADS.out
+srun ./main_cg_poisson.x $nx $ny $nz >> results_cg_poisson_perf$OMP_NUM_THREADS.out
+srun ./main_cg_poisson_preconditioned.x $nx $ny $nz >> results_cg_poisson_perf_precond$OMP_NUM_THREADS.out
 
