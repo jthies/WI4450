@@ -94,18 +94,20 @@ void pcg_solver(stencil3d const* op, int n, double* x, double const* b,
 
               std::swap(rho_old, rho);
             }// end of while-loop
+            
+            *numIter = iter;
           }
        }
   }
   #pragma omp taskwait
+
+  // return number of iterations and achieved residual
+  *resNorm = rho;
 
   // clean up
   delete [] p;
   delete [] q;
   delete [] r;
 
-  // return number of iterations and achieved residual
-  *resNorm = rho;
-  *numIter = iter;
   return;
 }
