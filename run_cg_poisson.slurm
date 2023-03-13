@@ -10,5 +10,6 @@
 
 # run CG for a n^3 Poisson problem
 n=128
-export OMP_NUM_THREADS=12
-srun ./main_cg_poisson.x $n
+export OMP_NUM_THREADS=24
+srun ./main_benchmarks.x $n >> benchmarks$OP_NUM_THREADS.out
+srun ./main_cg_poisson.x $n >> cg_poisson$OP_NUM_THREADS.out

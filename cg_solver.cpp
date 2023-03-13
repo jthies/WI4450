@@ -46,7 +46,7 @@ void cg_solver(stencil3d const* op, int n, double* x, double const* b,
 
     if (verbose)
     {
-      std::cout << std::setw(4) << iter << "\t" << std::setw(8) << std::setprecision(4) << sqrt(rho) << std::endl;
+      std::cout << std::setw(4) << iter << "\t" << std::setw(8) << std::setprecision(4) << rho << std::endl;
       // std::cout << std::setprecision(4) << rho << ","; // if you want to plot it in python
     }
 

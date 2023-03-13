@@ -3,7 +3,9 @@
 #include "timer.hpp"
 
 #include <iostream>
+#include <iomanip>
 #include <cmath>
+#include <stdexcept>
 #include <limits>
 
 #include <cmath>
@@ -106,7 +108,8 @@ int main(int argc, char* argv[])
 
   try {
   Timer t("cg_solver");
-  cg_solver(&L, n, x, b, tol, maxIter, &resNorm, &numIter);
+  cg_solver(&L, n, x, b, tol, maxIter, &resNorm, &numIter, 0);
+  std::cout << std::setw(4) << numIter << "\t" << std::setw(8) << std::setprecision(4) << resNorm << std::endl;
   } catch(std::exception e)
   {
     std::cerr << "Caught an exception in cg_solve: " << e.what() << std::endl;
