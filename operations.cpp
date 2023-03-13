@@ -94,4 +94,5 @@ void apply_diagonalMatrix(int n, double s,
   #pragma omp parallel for
   for (int t = 0; t < n; t++)
     v[t] = s * u[t];
+  return;
 }
