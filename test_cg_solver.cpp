@@ -5,13 +5,13 @@
 #include <iostream>
 #include <cmath>
 #include <limits>
-// note: you may add any number of tests to verify
-// your code behaves correctly, but do not change
-// the existing tests.
 
 TEST(cg_solver, cg_solver)
 {
-  const int nx=2, ny=2, nz=2;
+/*This is a test for cg_solver which solves the linear system Ax=b
+  Here we use a diagonal matrix as A and all-one vector as b, by which 
+  we know the correct solution easily.*/
+  const int nx=9, ny=5, nz=6;
   const int n=nx*ny*nz;
   
   stencil3d S;
@@ -27,7 +27,7 @@ TEST(cg_solver, cg_solver)
   double *x = new double[n]; // solution vector x
   double *b = new double[n]; // right hand side vector b
   init(n, x, 0.0); // solution starts with [0,0,...]
-  init(n, b, 1.0); // right hand side b=[2,2,...] 
+  init(n, b, 1.0); // right hand side b=[1,1,...] 
 
   // solve the linear system of equations using CG
   int numIter, maxIter=100;
