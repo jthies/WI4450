@@ -66,7 +66,7 @@ TEST(operations, dot) {
     y[i] = 1.0/double(i+1);
   }
 
-  double res = dot(n, x, y);
+  double res = dot(n, x, y); // The results of dot(x,y) should be equal to the length n
   EXPECT_NEAR(res, (double)n, n*std::numeric_limits<double>::epsilon());
 }
 
@@ -85,7 +85,7 @@ TEST(operations, axpby)
      y[i] = double(n-i-1)/2.0;
   }
 
-  axpby(n, a, x, b, y);
+  axpby(n, a, x, b, y); // The results of axpby should be the array in which every element is equal to the length n
   
   double err=0.0;
   for (int i=0; i<n; i++) err = std::max(err, std::abs(y[i]-double(n)));
@@ -93,9 +93,10 @@ TEST(operations, axpby)
 }
 
 
-TEST(operations,stencil3d_symmetric)
+TEST(operations,stencil3d_symmetric_1)
 {
-//  const int nx=3, ny=4, nz=5;
+// This is the first test for apply_stencil3d
+// The number of points in three dimensions x,y,z is same
   const int nx=2, ny=2, nz=2;
   const int n=nx*ny*nz;
   double* e=new double[n];
@@ -145,8 +146,10 @@ TEST(operations,stencil3d_symmetric)
 }
 
 
-TEST(operations,stencil3d_symmetric_1)
+TEST(operations,stencil3d_symmetric_2)
 {
+// This is the second test for apply_stencil3d
+// The number of points in three dimensions x,y,z is different. nx=3, ny=4, nz=5
   const int nx=3, ny=4, nz=5;
  // const int nx=2, ny=2, nz=2;
   const int n=nx*ny*nz;
