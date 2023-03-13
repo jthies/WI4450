@@ -1,6 +1,14 @@
+# How to use
+# > module load 2022r2 nvhpc
+# > make TARGET=cpu
+# or
+# > make TARGET=gpu
+# or
+# to run the test: make test
+
+
 CXX=g++
 CXX_FLAGS=-O2 -g -fopenmp -std=c++17
-
 DEFS=-DNDEBUG
 
 #default target (built when typing just "make")
