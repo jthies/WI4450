@@ -47,7 +47,7 @@ on a $600^3$ grid on 12 cores and produce a runtime profile, e.g. as a 'pie char
 and how much memory do you need to request on DelfBlue for the CG solver to run? Does it help to use more aggressive compiler optimization, e.g. ``-O3 -march=native``? If this run takes more than a few minutes, continue with a more feasible grid size and return to this one after you have
 optimized your code a bit, see below.
 2. Extend the ``Timer`` class to store two additional doubles: the number of floating point operations (flops) performed in the timed section,
-and the number of bytes loaded and/or stored. The ``summarize()`` function should print out three additional columns:
+and the number of bytes loaded and/or stored. The ``summarize()`` function should print out three additional columns:  
     - the computational intensity of the timed section
     - the average floating point rate achieved (in Gflop/s)
     - the average data bandwidth achieved (in GByte/s)  
@@ -59,7 +59,7 @@ the achieved memory bandwidth for the chosen likwid benchmark and the operation 
 the roofline model prediction for the case of 12 threads.
 4.  Repeat this to create similar graphs for up to 48 threads and report the overall efficiency on a full node. If this is significantly worse than on 12 cores, you may be struggling with the Non-Uniform Memory Architecture (NUMA): 12 cores can access memory **which they  initialized** at the maximum speed (one NUMA domain).
 If you go beyond that, you may need to make sure that threads mostly access the memory portions they initialized, by adding the ``schedule(static)`` clause to your ``#pragma omp parallel for`` statements. Also, make sure to set the environment variables ``OMP_PROC_BIND=close`` and ``OMP_PLACES=cores``.
-5.  For any operation that performs significantly worse than the roofline prediction on 12 cores (say, less than 50%), try to optimize that operation by
+5.  For any operation that performs significantly worse than the roofline prediction on 12 cores (say, less than 50%), try to optimize that operation by  
         - experimenting with compiler flags
         - checking the model assumptions and hardware parameters
         - actually changing the code. For example, if you used if-statements in the apply_stencil3d innermost loop, try to get rid of them. If you have more than one read of the u vector and one write of the v vector because of multiple passes over them, reduce the data traffic. If your code is much faster for certain grid sizes and then suddenly the performance drops as you increase it, try implementing a variant that loops over blocks or try parallelizing the innermost loop instead of the outermost one. Use the 'layer condition' introduced in lecture 6 by Prof. Wellein to guide these optimizations. Document the changes that have a positive effect along with the achieved percentage of the roofline model. And -- obviously -- run your tests after each step to make sure that your code is producing correct results.
