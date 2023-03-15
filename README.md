@@ -58,7 +58,7 @@ What is the limiting hardware factor for each operation based on the roofline di
 the achieved memory bandwidth for the chosen likwid benchmark and the operation in CG you benchmarked, and note down the absolute efficiency of your code compared to
 the roofline model prediction for the case of 12 threads.
 4.  Repeat this to create similar graphs for up to 48 threads and report the overall efficiency on a full node. If this is significantly worse than on 12 cores, you may be struggling with the Non-Uniform Memory Architecture (NUMA): 12 cores can access memory **which they  initialized** at the maximum speed (one NUMA domain).
-If you go beyond that, you may need to make sure that threads mostly access the memory portions they initialized, by adding the ``schedule(static)`` clause to your ``#pragma omp parallel for`` statements. Also, make sure to set the environment variables ``OMP_PROC_BIND=thread``
+If you go beyond that, you may need to make sure that threads mostly access the memory portions they initialized, by adding the ``schedule(static)`` clause to your ``#pragma omp parallel for`` statements. Also, make sure to set the environment variables ``OMP_PROC_BIND=close`` and ``OMP_PLACES=cores``.
 5.  For any operation that performs significantly worse than the roofline prediction on 12 cores (say, less than 50%), try to optimize that operation by
         - experimenting with compiler flags
         - checking the model assumptions and hardware parameters
