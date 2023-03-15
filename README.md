@@ -47,10 +47,11 @@ on a $600^3$ grid on 12 cores and produce a runtime profile, e.g. as a 'pie char
 and how much memory do you need to request on DelfBlue for the CG solver to run? Does it help to use more aggressive compiler optimization, e.g. ``-O3 -march=native``? If this run takes more than a few minutes, continue with a more feasible grid size and return to this one after you have
 optimized your code a bit, see below.
 2. Extend the ``Timer`` class to store two additional doubles: the number of floating point operations (flops) performed in the timed section,
-the number of bytes loaded and stored. The ``summarize()`` function should print out three additional columns:
+and the number of bytes loaded and/or stored. The ``summarize()`` function should print out three additional columns:
     - the computational intensity of the timed section
     - the average floating point rate achieved (in Gflop/s)
     - the average data bandwidth achieved (in GByte/s)
+
 Run your benchmark program for the same problem size and 12 cores (with the values inserted in the Timer constructors), and decide what is the limiting hardware factor for each operation based on the roofline diagram from lecture 4? Hint: for ``apply_stencil3d`` the exact amount of data loaded is unclear due to caching. Here you can start with the most optimistic case (all elements cached after the first time they are accessed).
 3. For each operation, determine the applicable peak performance Rmax assuming 12 cores with 2 AVX512 FMA units (see lecture 1). Use the likwid-bench tool to measure the bandwidth on 12 cores (flag ``-w M0:<size>`` where <size> is the size of a vector). You can get a list of benchmarks it supports using ``-a`` and determine a suitable maximum memory bandwidth for each of your operations by selecting one that has a similar load/store ratio (note that you need to ``module load 2022r2 likwid`` on DelftBlue). Run both the likwid benchmarks and your benchmark program for 1, 2, 4, 6, 8, 10 and 12 threads. Make plots that show
 the achieved memory bandwidth for the chosen likwid benchmark and the operation in CG you benchmarked, and note down the absolute efficiency of your code compared to
