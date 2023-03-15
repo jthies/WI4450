@@ -40,7 +40,7 @@ Include the report in PDF format in your submission (see below).
 - Push your latest version to forked repository
 - Create a merge request, using ``<netid>`` as the source and target branch (on the original repository).
 
-## Part 1: performance analysis of homeowkr 1
+## Your tasks
 
 1. If you haven't done so, add a Timer object to each of your basic operations from homework 1. Run the CG solver for 100 iterations
 on a $`600^3`$ grid on 12 cores and produce a runtime profile, e.g. as a 'pie chart'. What is the approximate size of a vector for this grid size,
