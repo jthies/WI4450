@@ -52,7 +52,9 @@ and the number of bytes loaded and/or stored. The ``summarize()`` function shoul
     - the average floating point rate achieved (in Gflop/s)
     - the average data bandwidth achieved (in GByte/s)
 
-Run your benchmark program for the same problem size and 12 cores (with the values inserted in the Timer constructors), and decide what is the limiting hardware factor for each operation based on the roofline diagram from lecture 4? Hint: for ``apply_stencil3d`` the exact amount of data loaded is unclear due to caching. Here you can start with the most optimistic case (all elements cached after the first time they are accessed).
+Run your benchmark program for the same problem size and 12 cores (with the values inserted in the Timer calls).
+What is the limiting hardware factor for each operation based on the roofline diagram from lecture 4? 
+**Hint:** for ``apply_stencil3d`` the exact amount of data loaded is unclear due to caching. Here you can start with the most optimistic case (all elements cached after the first time they are accessed).
 3. For each operation, determine the applicable peak performance Rmax assuming 12 cores with 2 AVX512 FMA units (see lecture 1). Use the likwid-bench tool to measure the bandwidth on 12 cores (flag ``-w M0:<size>`` where <size> is the size of a vector). You can get a list of benchmarks it supports using ``-a`` and determine a suitable maximum memory bandwidth for each of your operations by selecting one that has a similar load/store ratio (note that you need to ``module load 2022r2 likwid`` on DelftBlue). Run both the likwid benchmarks and your benchmark program for 1, 2, 4, 6, 8, 10 and 12 threads. Make plots that show
 the achieved memory bandwidth for the chosen likwid benchmark and the operation in CG you benchmarked, and note down the absolute efficiency of your code compared to
 the roofline model prediction for the case of 12 threads.
