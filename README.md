@@ -50,8 +50,7 @@ optimized your code a bit, see below.
 and the number of bytes loaded and/or stored. The ``summarize()`` function should print out three additional columns:
     - the computational intensity of the timed section
     - the average floating point rate achieved (in Gflop/s)
-    - the average data bandwidth achieved (in GByte/s)
-
+    - the average data bandwidth achieved (in GByte/s)  
 Run your benchmark program for the same problem size and 12 cores (with the values inserted in the Timer calls).
 What is the limiting hardware factor for each operation based on the roofline diagram from lecture 4? 
 **Hint:** for ``apply_stencil3d`` the exact amount of data loaded is unclear due to caching. Here you can start with the most optimistic case (all elements cached after the first time they are accessed).
