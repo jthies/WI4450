@@ -42,10 +42,11 @@ Include the report in PDF format in your submission (see below).
 
 ## Part 1: performance analysis of homeowkr 1
 
-1. If you haven't done so, add a Timer object to each of your basic operations from homework 1. Run the CG solver for 500 iterations
-on a $`500^3`$ grid on 12 cores and produce a runtime profile, e.g. as a 'pie chart'. What is the approximate size of a vector for this grid size,
-and how much memory do you need to request on DelfBlue for the CG solver to run? Does it help to use more aggressive compiler optimization, e.g. ``-O3 -march=native``?
-2. Extend the timer class to store two additional doubles: the number of floating point operations (flops) performed in the timed section,
+1. If you haven't done so, add a Timer object to each of your basic operations from homework 1. Run the CG solver for 100 iterations
+on a $`600^3`$ grid on 12 cores and produce a runtime profile, e.g. as a 'pie chart'. What is the approximate size of a vector for this grid size,
+and how much memory do you need to request on DelfBlue for the CG solver to run? Does it help to use more aggressive compiler optimization, e.g. ``-O3 -march=native``? If this run takes more than a few minutes, continue with a more feasible grid size and return to this one after you have
+optimized your code a bit, see below.
+2. Extend the ``Timer`` class to store two additional doubles: the number of floating point operations (flops) performed in the timed section,
 the number of bytes loaded and stored. The ``summarize()`` function should print out three additional columns:
     - the computational intensity of the timed section
     - the average floating point rate achieved (in Gflop/s)
