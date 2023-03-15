@@ -26,7 +26,7 @@ Include the report in PDF format in your submission (see below).
 ### Working with the repository
 
 - Before you start, fork the repository into your private github account.
-- In your cloned repository (on DelftBlue), add the new location as an alternative ``remote`:
+- In your existing local repository (on DelftBlue), add the new location as an alternative ```remote``:
     - ``git remote add github https://github.com/<username>/WI4450``
     - update your main branch by ``git checkout main`` and ``git pull github main``
     - update your previous implementation using ``git checkout <netid>`` and ``git merge main``.
