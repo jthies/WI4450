@@ -1,6 +1,6 @@
 # Special Topics in CSE: Preconditioned Krylov Methods for High Performance Computing
 
-## Homework 2: CG performance analysis and distributed memory
+## Homework 2: CG performance analysis and optimization
 
 In the second exercise, we will start by applying simple performance models to determine the
 efficiency of your implementation from homework 1. Then, we will try to improve the performance
