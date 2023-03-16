@@ -25,9 +25,12 @@ Include the report in PDF format in your submission (see below).
 
 ### Working with the repository
 
+- If you do not have an account on github, you create one and sign in.
+- If you do not have an ssh key registered on github, create one on DelftBlue
+  using ``ssh-keygen``, and upload the public key (``.pub`` file) following [these instructions ](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)
 - Before you start, fork the repository into your private github account.
 - In your existing local repository (on DelftBlue), add the new location as an alternative `"remote":
-    - ``git remote add github https://github.com/<username>/WI4450``
+    - ``git remote add github git@github.com:<username>/WI4450``.
     - update your main branch by ``git checkout main`` and ``git pull github main``
     - update your previous implementation using ``git checkout <netid>`` and ``git merge main``.
       This may or may not cause merge conflicts that you have to resolve (see lecture notes from session 3).
