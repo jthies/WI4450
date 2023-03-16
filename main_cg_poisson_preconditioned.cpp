@@ -111,7 +111,7 @@ int main(int argc, char* argv[])
         // use preconditioned cg solver
         Timer t("preconditioned cg_solver");
         precond_cg_solver(&L, n, x, b, tol, maxIter, &resNorm, &numIter);
-	std::cout<<"x[0] = "<< x[0] << ", x[" << n/2 << "] = " << x[n/2] << ", x["<<n-1<<"] = " << x[n-1] << std::endl;
+        std::cout<<"x[0] = "<<x[0]<<", x["<<n/2<<"] = "<<x[n/2]<< ", x["<<n-1<<"] = "<<x[n-1]<<std::endl;
       }
     } catch(std::exception e)
     {

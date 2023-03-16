@@ -7,7 +7,7 @@
 #include <iostream>
 #include <iomanip>
 
-//preconditioned
+//preconditioned cg solver
 void precond_cg_solver(stencil3d const* op, int n, double* x, double const* b,
         double tol, int maxIter,
         double* resNorm, int* numIter,
@@ -26,11 +26,9 @@ void precond_cg_solver(stencil3d const* op, int n, double* x, double const* b,
   double alpha, beta, rho=1.0, rho_old=0.0;
 
   // r = op * x
-  // [...]
   apply_stencil3d(op, x, r);
 
   // r = b - r;
-  // [...]
   axpby(n, 1.0, b, -1.0, r);
 
   init(n, p, 0.0);
@@ -41,11 +39,11 @@ void precond_cg_solver(stencil3d const* op, int n, double* x, double const* b,
   while (true)
   {
     iter++;
-    //solve Mz = r, Gauss-Seidel preconditioner
+    //solve Mz = r, with M the Jacobian preconditioner
     //z = s*r, s=1.0/op->value_c
     apply_diagonalMatrix(n, 1.0/op->value_c, r, z);
+
     // rho = <r, r>
-    // [...]
     rho = dot(n,r,z);
 
     if (verbose)
@@ -68,25 +66,20 @@ void precond_cg_solver(stencil3d const* op, int n, double* x, double const* b,
       alpha = rho / rho_old;
     }
     // p = z + alpha * p
-    // [...]
     axpby(n, 1.0, z, alpha, p);
 
     // q = op * p
-    // [...]
     apply_stencil3d(op, p, q);
 
     // beta = <p,q>
-    // [...]
     beta = dot(n,p,q);
 
     alpha = rho / beta;
 
     // x = x + alpha * p
-    // [...]
     axpby(n,alpha,p,1.0,x);
 
     // r = r - alpha * q
-    // [...]
     axpby(n,-alpha, q, 1.0, r);
 
     std::swap(rho_old, rho);
@@ -96,6 +89,7 @@ void precond_cg_solver(stencil3d const* op, int n, double* x, double const* b,
   delete [] p;
   delete [] q;
   delete [] r;
+  //clean up extra vector
   delete [] z;
 
   // return number of iterations and achieved residual
