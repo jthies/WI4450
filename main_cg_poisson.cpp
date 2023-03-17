@@ -51,10 +51,9 @@ stencil3d laplace3d_stencil(int nx, int ny, int nz)
 
 int main(int argc, char* argv[])
 {
-  // initialize MPI. This always has to be called first
-  // to set up the internal data structures of the library.
-  MPI_Init(&argc, &argv);
-  int nx, ny, nz;
+  {
+    Timer t("main");
+    int nx, ny, nz;
 
     if      (argc==1) {nx=128;           ny=128;           nz=128;}
     else if (argc==2) {nx=atoi(argv[1]); ny=nx;            nz=nx;}
@@ -63,39 +62,17 @@ int main(int argc, char* argv[])
     if (ny<0) ny=nx;
     if (nz<0) nz=nx;
 
-  // create the domain decomposition
-  decomp3d DD(nx, ny, nz);
-
-
-  if (rank==0)
-  {
-    std::cout << "Domain decomposition:"<<std::endl;
-    std::cout << "Grid is           ["<<nx << " x "<< ny << " x " << nz << "]"<<std::endl;
-    std::cout << "Processor grid is ["<<DD.npx << " x "<<DD.npy<<" x "<<DD.npz << "]"<<std::endl;
-  }
-  // ordered printing for nicer output
-  for (int p=0; p<nproc; p++)
-  {
-    if (rank==p) std::cout << "Local grid on P"<<rank<<": [<<DD.nx_loc <<" x "<< DD.ny_loc <<" x "<<DD.nz_loc << "]"<<std::endl;
-    MPI_Barrier(MPI_COMM_WORLD);
-  }
+    // total number of unknowns
+    int n=nx*ny*nz;
 
     double dx=1.0/(nx-1), dy=1.0/(ny-1), dz=1.0/(nz-1);
 
     // Laplace operator
     stencil3d L = laplace3d_stencil(nx,ny,nz);
 
-  // The stencil needs to take the decomp3d object along
-  // so that the offsets and neighbors can be determined
-  // inside the apply function
-  L.DD=DD;
-
-  // total number of unknowns on this process:
-  int nloc=L.DD.nx_loc*L.DD.ny_loc*L.DD.nz_loc;
-
-  // solution vector: start with a 0 vector
-  double *x = new double[n];
-  init(n, x, 0.0);
+    // solution vector: start with a 0 vector
+    double *x = new double[n];
+    init(n, x, 0.0);
 
     // right-hand side
     double *b = new double[n];
@@ -117,13 +94,12 @@ int main(int argc, char* argv[])
         }
       }
     }
-  }
-  // Dirichlet boundary conditions at z=0 (others are 0 in our case, initialized above)
-  for (int j=0; j<ny; j++)
-    for (int i=0; i<nx; i++)
-    {
-      b[L.index_c(i,j,0)] -= L.value_b*g_0(i*dx, j*dy);
-    }
+    // Dirichlet boundary conditions at z=0 (others are 0 in our case, initialized above)
+    for (int j=0; j<ny; j++)
+      for (int i=0; i<nx; i++)
+      {
+        b[L.index_c(i,j,0)] -= L.value_b*g_0(i*dx, j*dy);
+      }
 
     // solve the linear system of equations using CG
     int numIter, maxIter=500;
@@ -146,7 +122,5 @@ int main(int argc, char* argv[])
   }
   Timer::summarize();
 
-  // no MPI calls must be issued after this one...
-  MPI_Finalize();
   return 0;
 }
