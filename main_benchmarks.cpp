@@ -17,24 +17,6 @@ int main(int argc, char* argv[])
   double y[n];
   double res_value;
   double res_vector[n];
-  {
-    Timer t("init");
-    init(n, x, 1.0);
-  }
-  {
-    Timer t("init");
-    init(n, y, 2.0);
-  }
-  {
-    Timer t("dot");
-    res_value = dot(n, x, y);
-  }
-
-  {
-    Timer t("axpby");
-    axpby(n, 2.5, x, 1.5, y);
-  }
-
   stencil3d S;
   S.nx = nx; S.ny = ny; S.nz = nz;
   S.value_c = 8.0;
@@ -45,11 +27,31 @@ int main(int argc, char* argv[])
   S.value_t = 1.0;
   S.value_b = 1.0;
 
+  for (int i=0; i<10; i++)
   {
-    Timer t("apply_stencil3d");
-    apply_stencil3d(&S, x, res_vector);
-  }
+    {
+      Timer t("init");
+      init(n, x, 1.0);
+    }
+    {
+      Timer t("init");
+      init(n, y, 2.0);
+    }
+    {
+      Timer t("dot");
+      res_value = dot(n, x, y);
+    }
 
+    {
+      Timer t("axpby");
+      axpby(n, 2.5, x, 1.5, y);
+    }
+
+    {
+      Timer t("apply_stencil3d");
+      apply_stencil3d(&S, x, res_vector);
+    }
+  }
   Timer::summarize();
 
   return 0;
