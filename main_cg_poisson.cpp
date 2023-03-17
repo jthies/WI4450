@@ -109,8 +109,11 @@ int main(int argc, char* argv[])
     {
       {
         Timer t("cg_solver");
+        double sum = 0.0;
         cg_solver(&L, n, x, b, tol, maxIter, &resNorm, &numIter);
-        std::cout<<"x[0] = "<<x[0]<<", x["<<n/2<<"] = "<<x[n/2]<< ", x["<<n-1<<"] = "<<x[n-1]<<std::endl;
+        for (int i = 0; i<n; i++) sum += std::pow(x[i],2);
+        sum = std::sqrt(sum);
+        std::cout<<"||x||_2 = "<<sum<<std::endl;
       }
     } catch(std::exception e)
     {
