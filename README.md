@@ -1,90 +1,69 @@
 # Special Topics in CSE: Preconditioned Krylov Methods for High Performance Computing
 
-## Homework 1: Conjugate Gradient Method with OpenMP
+## Homework 2: CG performance analysis and optimization
 
-In this exercise, we will exploit **shared memory parallelism** to solve
-a standard partial differential equation, the 3D Poisson equation:
+In the second exercise, we will start by applying simple performance models to determine the
+efficiency of your implementation from homework 1. Then, we will try to improve the performance
+of the previous implementation step-by-step to get close to the predicted timings.
 
-```math
-- (\frac{\partial^2 u}{\partial x^2} + 
-\frac{\partial^2 u}{\partial y^2} + 
-\frac{\partial^2 u}{\partial z^2})
-= f(x,y,z),
-```
-on a unit cube $`\Omega = [0\dots 1] \times [0 \dots 1] \times [0\dots 1]`$, subject to Dirichlet boundary conditions
-
-- u(x,y,z)=0 if x=0, x=1, y=0, y=1, or z=1,
-- u(x,y,z)=g(x,y) if z=0.
-
-The PDE is discretized using second order finite diferences, and solved via the Conjugate Gradient method.
+The PDE, boundary conditions, discretization and solver are as in [homework 1](https://gitlab.tudelft.nl/dhpc/sticse-hpc/homework1).
 
 ## How to complete the homework
 
 ### Coding
 
-- The implementation will be done in (relatively basic/C-like) C++.
-- Places where you have to implement something are marked in the code skeleton by an ellipse ``[...]``.
-- Useful comments in your code are part of the assessment!
+You will improve on your existing C++/OpenMP implementation. Testing and benchmarking remain
+essential components of the workflow as you adapt your code step-by-step.
+For the experiments (other than running tests, which you may do on the login node), submit
+a batch job and add the flags ``--exclusive``, ``--nodes=1`` and ``--reservation=subnumatest``.
 
 ### Report
 
 Write a short report on your findings, in particular answering the questions posed below.
+You do not need to include source code in the report, this is submitted via the git repository.
 Include the report in PDF format in your submission (see below).
 
 ### Working with the repository
 
-- Before you start, fork the repository into your personal gitlab space.
-- clone the repository on DelftBlue using ``git clone https://gitlab.tudelft.nl/sticse-hpc/homework1``.
-- create a branch ``<netid>`` and work on this branch.
-- regularly push your work to the forked repository to avoid losing something
+- If you do not have an account on github, you create one and sign in.
+- If you do not have an ssh key registered on github, create one on DelftBlue
+  using ``ssh-keygen``, and upload the public key (``.pub`` file) following [these instructions ](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)
+- Before you start, fork the repository into your private github account.
+- In your existing local repository (on DelftBlue), add the new location as an alternative `"remote":
+    - ``git remote add github git@github.com:<username>/WI4450``.
+    - update your main branch by ``git checkout main`` and ``git pull github main``
+    - update your previous implementation using ``git checkout <netid>`` and ``git merge main``.
+      This may or may not cause merge conflicts that you have to resolve (see lecture notes from session 3).
+- regularly push your work to the (forked) repository to avoid losing something. The first time you push,
+  use the flag ``--set-upstream`` to make it the new default remote location and branch: ``git push --set-upstream github <netid>``.
 
 ### Submission
 
 - Add the final report as a PDF file (you may keep a LaTeX file or other source file in the repository, too).
-- Push your latest version of the ``<netid>`` branch to your forked repo
-- Create a merge request, using ``<netid>`` as both the source and target branch. If the original repository
-does not have this branch for your NetID, create an issue to request it
-in the [issue tracker](https://gitlab.tudelft.nl/dhpc/sticse-hpc/homework1/issues/)..
+- Push your latest version to forked repository
+- Create a merge request, using ``<netid>`` as the source and target branch (on the original repository).
 
-## Your Tasks
+## Your tasks
 
-1. implement the missing functions ``init``, ``axpby``, ``dot``,and ``apply_stencil3d`` using standard sequential for-loops.
-   The specification of these functions can be found in the file ``operations.hpp``.
-   Implement suitable unit tests to verify they work as expected. Remember that a good unit test does not
-   re-implement the operation, but verifies the correct behavior by checking mathematical relations for
-   simple, well-understood cases. For instance, the Laplace operator implemented in ``matvec`` computes the
-   second derivative of a 1D function in each direction, and should be second order accurate.
-   Some simple examples of a unit test is given in ``test_operations.cpp``, where you can add your own as well.
-   To compile and run the unit tests, use ``make test``. This may be done on the login node when developing on DelftBlue.
-   **Note:** you can implement the matrix-vector product with a 7-point stencil in any way you like (matrix-free, by storing
-   diagonals, etc.). Start with a simple implementation and create sufficient unit tests so that you can then refine it.
-   The tricky part here are the boundary conditions.
-
-2. Complete the Conjugate Gradient method in ``cg_solver.cpp`` by calling ythe previously implemented functions in the
-   locations indicated by an ellipse (``[...]``). Compile and run the driver application by typing ``make``. This executable creates a 3D Poisson problem and solves
-   it using the CG method. Add tests to a new file ``test_cg_solver.cpp`` and modify the makefile so that it is compiled into the ``run_tests.x`` executable.
-   ``n`` iterations).
-
-3. Parallelize your basic opera5ions from step 1 using OpenMP.  For the ``apply_stencil3d`` function, parallelize the outer loop only.
-   Rerun your tests using ``make test`` to verify that everything still works.
-
-4. Add a new main program ``main_benchmarks.cpp`` and update the ``Makefile`` to compile an executable ``main_benchmarks.x``.
-   You may find the ``Timer`` object useful, defined in ``timer.hpp``.
-   For the individual operations from task 1,
-   perform weak and strong scaling experiments on a DelftBlue node (using up to 48 cores). Include plots in your report, and interpret them.
-   To run these jobs, modify the commands in the jobscript ``run_cg_poisson.slurm`` to your needs, but leave the SBATCH lines unchanged.
-   How many cores are optimal for the ``main_cg_poisson.x`` application on a $512^3$ grid?
-
-5. For the ``apply_stencil3d`` operation, try interchanging the three nested loops, and run the code sequentially (set ``OMP_NUM_THREADS=1``).
-   Which loop order is best, and why? In case you stored the matrix entries in task 1, change the order in which they are accessed in ``apply_stencil3d``.
-
-6. Run the main_cg_poisson.x driver. Do you observe a performance difference when solving a $`1024 \times 128 \times 128`$ or a $`128 \times 128 \times 1024`$ problem on 8 cores? Add the ``collapse(3)`` clause to the OpenMP pragma line in ``apply_stencil3d`` and run again.
-Explain your observations.
-
-7. The bulk-synchronous performance model (BSP) views a program like poisson_cg as a sequence of parallel operations interleaved by communication phases.
-It predicts the overall runtime to be the sum of the cost of computation and communication phases. Can you spot opportunities in the CG algorithm to reduce
-the number of stages/loops? Implement your own version of the algorithm with fewer loops, and measure if this makes the method faster. Explain your observations.
-
-## Optional bonus task
-
-8. Make your basic operations run on the GPU using OpenMP ``target`` directives or C++20 (see [this repository](https://gitlab.tudelft.nl/dhpc/training/cxx-examples) for C++20 examples). Use the nvhpc compilers and the DelftBlue GPU nodes, as illustrated in that repo. Are all your tests still passing? Is the CG solver working correctly? And how fast is it on a V100s GPU compared to a standard compute node? A ``data`` statement in the outer CG scope can be used to make this run more efficient...
+1. If you haven't done so, add a Timer object to ``cg_solve`` and each of your basic operations from homework 1. Run the CG solver for 100 iterations
+on a $600^3$ grid on 12 cores and produce a runtime profile, e.g. as a 'pie chart'. What is the approximate size of a vector for this grid size,
+and how much memory do you need to request on DelfBlue for the CG solver to run? Does it help to use more aggressive compiler optimization, e.g. ``-O3 -march=native``? If this run takes more than a few minutes, continue with a more feasible grid size and return to this one after you have
+optimized your code a bit, see below.
+2. Extend the ``Timer`` class to store two additional doubles: the number of floating point operations (flops) performed in the timed section,
+and the number of bytes loaded and/or stored. The ``summarize()`` function should print out three additional columns:  
+    - the computational intensity of the timed section
+    - the average floating point rate achieved (in Gflop/s)
+    - the average data bandwidth achieved (in GByte/s)  
+Run your benchmark program for the same problem size and 12 cores (with the values inserted in the Timer calls).
+What is the limiting hardware factor for each operation based on the roofline diagram from lecture 4? 
+**Hint:** for ``apply_stencil3d`` the exact amount of data loaded is unclear due to caching. Here you can start with the most optimistic case (all elements cached after the first time they are accessed).
+3. For each operation, determine the applicable peak performance Rmax assuming 12 cores with 2 AVX512 FMA units (see lecture 1). Use the likwid-bench tool to measure the bandwidth on 12 cores (flag ``-w M0:<size>`` where ``<size>`` is the size of a vector). You can get a list of benchmarks it supports using ``-a`` and determine a suitable maximum memory bandwidth for each of your operations by selecting one that has a similar load/store ratio (note that you need to ``module load 2022r2 likwid`` on DelftBlue). Run both the likwid benchmarks and your benchmark program for 1, 2, 4, 6, 8, 10 and 12 threads. Make plots that show
+the achieved memory bandwidth for the chosen likwid benchmark and the operation in CG you benchmarked, and note down the absolute efficiency of your code compared to
+the roofline model prediction for the case of 12 threads.
+4.  Repeat this to create similar graphs for up to 48 threads and report the overall efficiency on a full node. If this is significantly worse than on 12 cores, you may be struggling with the Non-Uniform Memory Architecture (NUMA): 12 cores can access memory **which they  initialized** at the maximum speed (one NUMA domain).
+If you go beyond that, you may need to make sure that threads mostly access the memory portions they initialized, by adding the ``schedule(static)`` clause to your ``#pragma omp parallel for`` statements. Also, make sure to set the environment variables ``OMP_PROC_BIND=close`` and ``OMP_PLACES=cores``.
+5.  For any operation that performs significantly worse than the roofline prediction on 12 cores (say, less than 50%), try to optimize that operation by  
+    - experimenting with compiler flags
+    - checking the model assumptions and hardware parameters
+    - actually changing the code. For example, if you used if-statements in the apply_stencil3d innermost loop, try to get rid of them. If you have more than one read of the u vector and one write of the v vector because of multiple passes over them, reduce the data traffic. If your code is much faster for certain grid sizes and then suddenly the performance drops as you increase it, try implementing a variant that loops over blocks or try parallelizing the innermost loop instead of the outermost one. Use the 'layer condition' introduced in lecture 6 by Prof. Wellein to guide these optimizations. Document the changes that have a positive effect along with the achieved percentage of the roofline model. And -- obviously -- run your tests after each step to make sure that your code is producing correct results
+6.  Finally, what is the total CG runtime on 12 and 48 cores you achieve for the $600^3$ problem, and what is the total runtime predicted by the Roofline model?
