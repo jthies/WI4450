@@ -94,12 +94,13 @@ int main(int argc, char* argv[])
         }
       }
     }
-    // Dirichlet boundary conditions at z=0 (others are 0 in our case, initialized above)
-    for (int j=0; j<ny; j++)
-      for (int i=0; i<nx; i++)
-      {
-        b[L.index_c(i,j,0)] -= L.value_b*g_0(i*dx, j*dy);
-      }
+  }
+  // Dirichlet boundary conditions at z=0 (others are 0 in our case, initialized above)
+  for (int j=0; j<ny; j++)
+    for (int i=0; i<nx; i++)
+    {
+      b[L.index_c(i,j,0)] -= L.value_b*g_0(i*dx, j*dy);
+    }
 
     // solve the linear system of equations using CG
     int numIter, maxIter=500;

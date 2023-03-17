@@ -32,9 +32,9 @@ void axpby(int n, double a, double const* x, double b, double* y);
 //
 //   _ 
 // ^ /y
-//z|/  
+//z|/
 // +-->
-//   x 
+//   x
 //
 typedef struct stencil3d
 {
