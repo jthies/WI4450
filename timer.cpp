@@ -37,7 +37,7 @@ void Timer::summarize(std::ostream& os)
 {
   
   os << "==================== TIMER SUMMARY =========================================" << std::endl;
-  os << "label               \tcalls     \ttotal time\tmean time \tflops \tbytes"<<std::endl;
+  os << "label               \tcalls     \ttotal time\tmean time \tflops \t \tbytes"<<std::endl;
   os << "----------------------------------------------" << std::endl;
   for (auto [label, time]: times_)
   {
