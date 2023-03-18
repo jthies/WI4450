@@ -64,7 +64,6 @@ int main(int argc, char* argv[])
 
     // total number of unknowns
     int n=nx*ny*nz;
-
     double dx=1.0/(nx-1), dy=1.0/(ny-1), dz=1.0/(nz-1);
 
     // Laplace operator
