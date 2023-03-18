@@ -1,5 +1,5 @@
 #include "operations.hpp"
-#include <omp.h> 
+#include <omp.h>
 
 void init(int n, double* x, double value)
 {
@@ -38,7 +38,7 @@ void apply_stencil3d(stencil3d const* S,
 {
   //v=S*u: v,u vectors and S a 7-point stencil
   double sum;
-  #pragma omp parallel for reduction(+:sum) //collapse(3) <-for task 6 uncomment
+  #pragma omp parallel for reduction(+:sum) //collapse(3) <-for task 6 hw1, uncomment
   for (int k = 0; k < S->nz; k++)
   {
     for (int j = 0; j < S->ny; j++)

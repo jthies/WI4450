@@ -23,7 +23,7 @@ MAIN_OBJ=main_cg_poisson.o cg_solver.o operations.o timer.o
 MAIN_BENCH=main_benchmarks.o operations.o timer.o
 MAIN_OBJ_PRE=main_cg_poisson_preconditioned.o cg_solver_preconditioned.o operations.o timer.o
 
-run_tests.x: run_tests.cpp ${TEST_SOURCES} gtest_mpi.o operations.o cg_solver.o cg_solver_preconditioned.o
+run_tests.x: run_tests.cpp ${TEST_SOURCES} gtest_mpi.o timer.o operations.o cg_solver.o cg_solver_preconditioned.o
 	${CXX} ${CXX_FLAGS} ${DEFS} -o run_tests.x $^
 
 main_cg_poisson.x: ${MAIN_OBJ}

@@ -1,5 +1,6 @@
 #include "cg_solver.hpp"
 #include "operations.hpp"
+#include "timer.hpp"
 
 #include <cmath>
 #include <stdexcept>
@@ -24,14 +25,26 @@ void cg_solver(stencil3d const* op, int n, double* x, double const* b,
   double alpha, beta, rho=1.0, rho_old=0.0;
 
   // r = op * x
-  apply_stencil3d(op, x, r);
+  {
+    Timer t("apply_stencil3d");
+    apply_stencil3d(op, x, r);
+  }
 
   // r = b - r;
-  axpby(n, 1.0, b, -1.0, r);
+  {
+      Timer t("axpby");
+      axpby(n, 1.0, b, -1.0, r);
+  }
 
   // p = q = 0
-  init(n,p,0.0);
-  init(n,q,0.0);
+  {
+      Timer t("init");
+      init(n,p,0.0);
+  }
+  {
+      Timer t("init");
+      init(n,q,0.0);
+  }
 
   // start CG iteration
   int iter = -1;
@@ -40,7 +53,10 @@ void cg_solver(stencil3d const* op, int n, double* x, double const* b,
     iter++;
 
     // rho = <r, r>
-    rho = dot(n,r,r);
+    {
+        Timer t("dot");
+        rho = dot(n,r,r);
+    }
 
     if (verbose)
     {
@@ -62,21 +78,36 @@ void cg_solver(stencil3d const* op, int n, double* x, double const* b,
       alpha = rho / rho_old;
     }
     // p = r + alpha * p
-    axpby(n, 1.0, r, alpha, p);
+    {
+        Timer t("axpby");
+        axpby(n, 1.0, r, alpha, p);
+    }
 
     // q = op * p
-    apply_stencil3d(op, p, q);
-
+    {
+        Timer t("apply_stencil3d");
+        apply_stencil3d(op, p, q);
+    }
+    
     // beta = <p,q>
-    beta = dot(n,p,q);
+    {
+        Timer t("dot");
+        beta = dot(n,p,q);
+    }
 
     alpha = rho / beta;
 
     // x = x + alpha * p
-    axpby(n,alpha,p,1.0,x);
+     {
+        Timer t("axpby");
+        axpby(n,alpha,p,1.0,x);
+     }
 
     // r = r - alpha * q
-    axpby(n,-alpha, q, 1.0, r);
+     {
+        Timer t("axpby");
+        axpby(n,-alpha, q, 1.0, r);
+     }
     std::swap(rho_old, rho);
   }// end of while-loop
 

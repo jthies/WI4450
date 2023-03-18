@@ -52,7 +52,7 @@ stencil3d laplace3d_stencil(int nx, int ny, int nz)
 int main(int argc, char* argv[])
 {
   {
-    Timer t("main");
+    Timer t("main_cg_solver");
     int nx, ny, nz;
 
     if      (argc==1) {nx=128;           ny=128;           nz=128;}
@@ -102,7 +102,7 @@ int main(int argc, char* argv[])
       }
 
     // solve the linear system of equations using CG
-    int numIter, maxIter=500;
+    int numIter, maxIter=100;
     double resNorm, tol=std::sqrt(std::numeric_limits<double>::epsilon());
 
     try
