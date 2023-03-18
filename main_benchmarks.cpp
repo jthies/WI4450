@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
   {
     {
       Timer t("init");
-      t.n = n;
+      t.m = n;
       t.b = 1.0;
       init(n, x, 1.0);
     }
@@ -41,21 +41,21 @@ int main(int argc, char* argv[])
     }
     {
       Timer t("dot");
-      t.n = 2*n;
+      t.m = 2*n;
       t.b = 2.0;
       res_value = dot(n, x, y);
     }
 
     {
       Timer t("axpby");
-      t.n = 3*n;
+      t.m = 3*n;
       t.b = 3;
       axpby(n, 2.5, x, 1.5, y);
     }
 
     {
       Timer t("apply_stencil3d");
-      t.n = n + 4*((nx-1)*ny*nz + nx*(ny-1)*nz + nx*ny*(nz-1));
+      t.m = n + 4*((nx-1)*ny*nz + nx*(ny-1)*nz + nx*ny*(nz-1));
       t.b = 2*n + 2*(nx-1)*ny*nz + 2*nx*(ny-1)*nz + 2*nx*ny*(nz-1);
       apply_stencil3d(&S, x, res_vector);
     }

@@ -29,8 +29,8 @@ std::map<std::string, double> Timer::bytes_;
     double t_end = omp_get_wtime();
     times_[label_] += t_end - t_start_;
     counts_[label_]++;
-    flops_[label_] = n;
-    bytes_[label_] = b*n*size(double);
+    flops_[label_] = m;
+    bytes_[label_] = b*m*sizeof(double);
   }
 
 void Timer::summarize(std::ostream& os)
