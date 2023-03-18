@@ -1,5 +1,5 @@
 CXX=g++
-CXX_FLAGS=-O2 -g -fopenmp -std=c++17
+CXX_FLAGS=-O3 -march=native -fopenmp -std=c++17
 
 DEFS=-DNDEBUG
 
@@ -39,7 +39,7 @@ test: run_tests.x
 	./run_tests.x
 
 clean:
-	-rm *.o *.x *.out
+	-rm *.o *.x
 
 # phony targets are run regardless of dependencies being up-to-date
 PHONY: clean, test
