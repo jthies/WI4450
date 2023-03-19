@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <iomanip>
+#include <cmath>
 
 // static members of a class must be defined
 // somewhere in an object file, otherwise you
@@ -40,11 +41,12 @@ void Timer::summarize(std::ostream& os)
   os << "==================== TIMER SUMMARY =========================================" << std::endl;
   os << "label               \tcalls     \ttotal time\tmean time\tcomp. intensity\t mean Gflop/s\tmean Gbyte/s"<<std::endl;
   os << "----------------------------------------------" << std::endl;
+  double convert = std::pow(10.0,9);
   for (auto [label, time]: times_)
   {
     int count = counts_[label];
-    double gflops = flops_[label] / 1000000.0; //convert flop to Gflop
-    double gbytes = bytes_[label] / 1000000.0; //convert byte to Gbyte
+    double gflops = flops_[label] / convert; //convert flop to Gflop
+    double gbytes = bytes_[label] / convert; //convert byte to Gbyte
     double mean_time = time/double(count);
     std::cout << std::setw(20) << label << "\t" << std::setw(10) << count << "\t" << std::setw(10) << time << "\t" << std::setw(10) 
         << mean_time << "\t" << std::setw(10) << gflops/gbytes << "\t" << std::setw(10) << gflops/mean_time <<"\t" << std::setw(10) 
