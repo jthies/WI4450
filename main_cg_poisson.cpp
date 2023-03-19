@@ -100,7 +100,7 @@ int main(int argc, char* argv[])
     }
 
   // solve the linear system of equations using CG
-  int numIter, maxIter=500;
+  int numIter, maxIter=100;
   double resNorm, tol=std::sqrt(std::numeric_limits<double>::epsilon());
 
   try {
