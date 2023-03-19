@@ -31,32 +31,36 @@ int main(int argc, char* argv[])
   {
     {
       Timer t("init");
-      t.m = n;
-      t.b = 1.0;
+      t.m = 1.0*n; //type double
+      t.b = 1.0*n; //type doubel
       init(n, x, 1.0);
     }
     {
       Timer t("init");
+      t.m = 1.0*n; //type double
+      t.b = 1.0*n; //type double
       init(n, y, 2.0);
     }
     {
       Timer t("dot");
-      t.m = 2.0*n;
-      t.b = 2.0;
+      t.m = 2.0*n; //type double
+      t.b = 2.0*n; //type double
       res_value = dot(n, x, y);
     }
 
     {
       Timer t("axpby");
-      t.m = 3.0*n;
-      t.b = 3.0;
+      t.m = 3.0*n; //type double
+      t.b = 3.0*n; //type double
       axpby(n, 2.5, x, 1.5, y);
     }
 
     {
       Timer t("apply_stencil3d");
-      t.m = n + 4.0*((nx-1)*ny*nz + nx*(ny-1)*nz + nx*ny*(nz-1));
-      t.b = 2.0*n + 2.0*(nx-1)*ny*nz + 2*nx*(ny-1)*nz + 2*nx*ny*(nz-1);
+      t.m = 1.0 * n + 4.0 * ( (nx - 1.0) * ny * nz + nx * (ny - 1.0) * nz + nx * ny * (nz - 1.0) ); //type double, already within the equation, 
+                                                                                                    //otherwise incorrect result because of 
+                                                                                                    //possibly large value (encoutered at n=600^3)
+      t.b = 2.0 * n + 2.0 * ( (nx - 1.0) * ny * nz + nx * (ny - 1.0) * nz + nx * ny * (nz - 1.0) ); //type double
       apply_stencil3d(&S, x, res_vector);
     }
   }
