@@ -31,13 +31,13 @@ int main(int argc, char* argv[])
   {
     {
       Timer t("init");
-      t.m = 1.0*n; //type double
+      t.m = 0.0; //type double
       t.b = 1.0*n; //type doubel
       init(n, x, 1.0);
     }
     {
       Timer t("init");
-      t.m = 1.0*n; //type double
+      t.m = 0.0*n; //type double
       t.b = 1.0*n; //type double
       init(n, y, 2.0);
     }
