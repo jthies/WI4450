@@ -31,8 +31,7 @@ std::map<std::string, double> Timer::bytes_;
     times_[label_] += t_end - t_start_;
     counts_[label_]++;
     flops_[label_] = m; //m is double
-    bytes_[label_] = b*sizeof(double);  //b is double, sizeof(double) is integer, double*integer=double
-                                        //all basis operations use doubles in computations
+    bytes_[label_] = b;  //b is double
   }
 
 void Timer::summarize(std::ostream& os)
