@@ -15,7 +15,7 @@ The PDE, boundary conditions, discretization and solver are as in [homework 1](h
 You will improve on your existing C++/OpenMP implementation. Testing and benchmarking remain
 essential components of the workflow as you adapt your code step-by-step.
 For the experiments (other than running tests, which you may do on the login node), submit
-a batch job and add the flags ``--exclusive``, ``--nodes=1`` and ``--reservation=subnumatest``.
+a batch job and add the flags ``--exclusive`` and ``--nodes=1``.
 
 ### Report
 
