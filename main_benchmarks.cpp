@@ -2,6 +2,7 @@
 #include "timer.hpp"
 #include<iostream>
 
+
 int main(int argc, char* argv[])
 {
   int nx, ny, nz;
@@ -27,31 +28,31 @@ int main(int argc, char* argv[])
   S.value_t = 1.0;
   S.value_b = 1.0;
 
-  for (int i=0; i<10; i++)
+  for (int i=0; i<100; i++)
   {
     {
       Timer t("init");
-      t.m = 0.0; //type double
-      t.b = 1.0*n; //type doubel
+      t.m = 0.0; 
+      t.b = 1.0*n*sizeof(double); //type double
       init(n, x, 1.0);
     }
     {
       Timer t("init");
-      t.m = 0.0*n; //type double
-      t.b = 1.0*n; //type double
+      t.m = 0.0; 
+      t.b = 1.0*n*sizeof(double); //type double
       init(n, y, 2.0);
     }
     {
       Timer t("dot");
-      t.m = 2.0*n; //type double
-      t.b = 2.0*n; //type double
+      t.m = 2.0*n; 
+      t.b = 2.0*n*sizeof(double); //type double
       res_value = dot(n, x, y);
     }
 
     {
       Timer t("axpby");
-      t.m = 3.0*n; //type double
-      t.b = 3.0*n; //type double
+      t.m = 3.0*n; 
+      t.b = 3.0*n*sizeof(double); //type double
       axpby(n, 2.5, x, 1.5, y);
     }
 
@@ -60,7 +61,7 @@ int main(int argc, char* argv[])
       t.m = 1.0 * n + 4.0 * ( (nx - 1.0) * ny * nz + nx * (ny - 1.0) * nz + nx * ny * (nz - 1.0) ); //type double, already within the equation, 
                                                                                                     //otherwise incorrect result because of 
                                                                                                     //possibly large value (encoutered at n=600^3)
-      t.b = 2.0 * n + 2.0 * ( (nx - 1.0) * ny * nz + nx * (ny - 1.0) * nz + nx * ny * (nz - 1.0) ); //type double
+      t.b = (2.0 * n + 7.0) * sizeof(double) + 3.0 * sizeof(int); //2*n+y type double, 3 type integer
       apply_stencil3d(&S, x, res_vector);
     }
   }
