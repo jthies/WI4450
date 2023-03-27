@@ -6,8 +6,8 @@
 
 int main(int argc, char* argv[])
 {
- {Timer t("main"); // measure the total running time of main function
-  int nx, ny, nz; 
+ {
+  int nx, ny, nz;
 
   if      (argc==1) {nx=128;           ny=128;           nz=128;}
   else if (argc==2) {nx=atoi(argv[1]); ny=nx;            nz=nx;}
@@ -17,6 +17,8 @@ int main(int argc, char* argv[])
   if (nz<0) nz=nx;
 
   int n = nx*ny*nz; // problem size
+ 
+  Timer t("main",nx, ny, nz); // measure the total running time of main function
 
   double* x = new double[n];   
   double* y = new double[n];
@@ -33,29 +35,29 @@ int main(int argc, char* argv[])
 
   // measure the running time of init
   { 
-    Timer t("init");
+    Timer t("init",nx, ny, nz);
     init(n,x,2.0); 
   }
 
   {
-    Timer t("init");
+    Timer t("init",nx, ny, nz);
     init(n,y,1.0);
   }
   
   // measure the running time of dot
   {
-    Timer t("dot");
+    Timer t("dot",nx, ny, nz);
     dot(n,x,y);
   }
 
   // measure the running time of axpby
-  { Timer t("axpby");
+  { Timer t("axpby",nx, ny, nz);
     axpby(n, 3.0, x, 2.0, y);
   }
 
   // measure the running time of apply_stencil3d
   {
-    Timer t("applystencil");
+    Timer t("apply_stencil3d",nx, ny, nz);
     apply_stencil3d(&S, x, y);
   }
 
