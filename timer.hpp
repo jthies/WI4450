@@ -35,15 +35,20 @@ class Timer
 {
 public:
 
-  Timer(std::string label);
+  Timer(std::string label,int nx, int ny, int nz);
   ~Timer();
   static void summarize(std::ostream& os=std::cout);
 
 private:
 
   std::string label_;
+  int nx_, ny_, nz_;  // I add problem size to the class to help measure the ...
   double t_start_;
   static std::map<std::string, double> times_;
   static std::map<std::string, int> counts_;
 
+  static std::map<std::string, double> Ic_; // computational intensity
+  static std::map<std::string, double> Gf_; // floating point rate Gflops/s
+  static std::map<std::string, double> Gb_; // data bandwidth Gbytes/s
 };
+
