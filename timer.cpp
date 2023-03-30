@@ -41,15 +41,19 @@ void Timer::summarize(std::ostream& os)
   os << "label               \tcalls     \ttotal time\tmean time\tcomp. intensity\t mean Gflop/s\tmean Gbyte/s"<<std::endl;
   os << "----------------------------------------------" << std::endl;
   double convert = std::pow(10.0,9);
+  unsigned int n_threads = std::max(atoi(std::getenv("OMP_NUM_THREADS")), 1);
   for (auto [label, time]: times_)
   {
     int count = counts_[label];
+    int itPerThread = int(count) / int(n_threads);
     double gflops = flops_[label] / convert; //convert flop to Gflop
     double gbytes = bytes_[label] / convert; //convert byte to Gbyte
+    double gflops_rate = gflops * itPerThread / time;
+    double gbytes_rate = gbytes * itPerThread / time;
     double mean_time = time/double(count);
     std::cout << std::setw(20) << label << "\t" << std::setw(10) << count << "\t" << std::setw(10) << time << "\t" << std::setw(10) 
-        << mean_time << "\t" << std::setw(10) << gflops/gbytes << "\t" << std::setw(10) << gflops/mean_time <<"\t" << std::setw(10) 
-        << gbytes/mean_time << std::endl;
+        << mean_time << "\t" << std::setw(10) << gflops/gbytes << "\t" << std::setw(10) << gflops_rate <<"\t" << std::setw(10) 
+        << gbytes_rate << std::endl;
   }
   os << "============================================================================" << std::endl;
 }
