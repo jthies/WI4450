@@ -39,18 +39,19 @@ stencil3d laplace3d_stencil(int nx, int ny, int nz)
   stencil3d L;
   L.nx=nx; L.ny=ny; L.nz=nz;
   double dx=1.0/(nx-1), dy=1.0/(ny-1), dz=1.0/(nz-1);
-  L.value_c = 2.0/(dx*dx) + 2.0/(dy*dy) + 2.0/(dz*dz);
-  L.value_n =  -1.0/(dy*dy);
-  L.value_e = -1.0/(dx*dx);
-  L.value_s =  -1.0/(dy*dy);
-  L.value_w = -1.0/(dx*dx);
-  L.value_t = -1.0/(dz*dz);
-  L.value_b = -1.0/(dz*dz);
+  L.value_c =  1.0;   //2.0/(dx*dx) + 2.0/(dy*dy) + 2.0/(dz*dz);
+  L.value_n = (-1.0/(dy*dy)) / (2.0/(dx*dx) + 2.0/(dy*dy) + 2.0/(dz*dz));
+  L.value_e = (-1.0/(dx*dx)) / (2.0/(dx*dx) + 2.0/(dy*dy) + 2.0/(dz*dz));
+  L.value_s = (-1.0/(dy*dy)) / (2.0/(dx*dx) + 2.0/(dy*dy) + 2.0/(dz*dz));
+  L.value_w = (-1.0/(dx*dx)) / (2.0/(dx*dx) + 2.0/(dy*dy) + 2.0/(dz*dz));
+  L.value_t = (-1.0/(dz*dz)) / (2.0/(dx*dx) + 2.0/(dy*dy) + 2.0/(dz*dz));
+  L.value_b = (-1.0/(dz*dz)) / (2.0/(dx*dx) + 2.0/(dy*dy) + 2.0/(dz*dz));
   return L;
 }
 
 int main(int argc, char* argv[])
 {
+ {
   int nx, ny, nz;
 
   if      (argc==1) {nx=128;           ny=128;           nz=128;}
@@ -62,6 +63,8 @@ int main(int argc, char* argv[])
 
   // total number of unknowns
   int n=nx*ny*nz;
+
+  Timer t("main",nx, ny, nz);
 
   double dx=1.0/(nx-1), dy=1.0/(ny-1), dz=1.0/(nz-1);
 
@@ -78,17 +81,17 @@ int main(int argc, char* argv[])
 
   // initialize the rhs with f(x,y,z) in the interior of the domain
 #pragma omp parallel for schedule(static)
-  for (int k=0; k<nz; k++)
+  for (int k=1; k<nz-1; k++)
   {
     double z = k*dz;
-    for (int j=0; j<ny; j++)
+    for (int j=1; j<ny-1; j++)
     {
       double y = j*dy;
-      for (int i=0; i<nx; i++)
+      for (int i=1; i<nx-1; i++)
       {
         double x = i*dx;
         int idx = L.index_c(i,j,k);
-        b[idx] = f(x,y,z);
+        b[idx] = f(x,y,z) / (2.0/(dx*dx) + 2.0/(dy*dy) + 2.0/(dz*dz));
       }
     }
   }
@@ -96,15 +99,14 @@ int main(int argc, char* argv[])
   for (int j=0; j<ny; j++)
     for (int i=0; i<nx; i++)
     {
-      b[L.index_c(i,j,0)] -= L.value_b*g_0(i*dx, j*dy);
+      b[L.index_c(i,j,0)] -= g_0(i*dx, j*dy)/ (dz*dz)/ (2.0/(dx*dx) + 2.0/(dy*dy) + 2.0/(dz*dz));
     }
 
   // solve the linear system of equations using CG
-  int numIter, maxIter=100;
+  int numIter, maxIter=500;
   double resNorm, tol=std::sqrt(std::numeric_limits<double>::epsilon());
 
-  try {
-  Timer t("cg_solver",nx, ny, nz);
+  try { Timer t("cg_solver", nx, ny, nz);
   cg_solver(&L, n, x, b, tol, maxIter, &resNorm, &numIter);
   } catch(std::exception e)
   {
@@ -113,9 +115,8 @@ int main(int argc, char* argv[])
   }
   delete [] x;
   delete [] b;
-
+  }
   Timer::summarize();
 
   return 0;
 }
-
