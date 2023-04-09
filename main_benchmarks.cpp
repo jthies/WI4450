@@ -2,11 +2,6 @@
 #include "timer.hpp"
 #include<iostream>
 
-double divide_over_two_units(int op)
-{
-    return double(op/2 + op%2);
-}
-
 int main(int argc, char* argv[])
 {
   int nx, ny, nz;
@@ -32,40 +27,39 @@ int main(int argc, char* argv[])
   S.value_n = 2.0;
   S.value_t = 1.0;
   S.value_b = 1.0;
+  int flp;
   for (int i=0; i<iter; i++)
   {
       {
         Timer t("init");
         t.m = 0.0; 
-        t.b = divide_over_two_units(1)*n*sizeof(double);
+        t.b = 1.0 * sizeof(double) * n;
         init(n, x, 1.0);
       }
       {
         Timer t("init");
         t.m = 0.0; 
-        t.b = divide_over_two_units(1)*n*sizeof(double);
+        t.b = 1.0 * sizeof(double) * n;
         init(n, y, 2.0);
       }
       {
         Timer t("dot");
-        t.m = divide_over_two_units(2)*n; 
-        t.b = divide_over_two_units(2)*n*sizeof(double);
+        t.m = 2.0 * n;
+        t.b = 2.0 * sizeof(double) * n;
         res_value = dot(n, x, y);
       }
     
       {
         Timer t("axpby");
-        t.m = divide_over_two_units(3)*n; 
-        t.b = divide_over_two_units(3)*n*sizeof(double);
+        t.m = 3.0 * n;
+        t.b = 3.0 * sizeof(double) * n ;
         axpby(n, 2.5, x, 1.5, y);
       }
     
       {
         Timer t("apply_stencil3d");
-        t.m = divide_over_two_units(1) * n + divide_over_two_units(4) * ( (nx - 1.0) * ny * nz + nx * (ny - 1.0) * nz + nx * ny * (nz - 1.0) ); //type double, already within the equation, 
-                                                                                                                                                //otherwise incorrect result because of 
-                                                                                                                                                //possibly large value (encoutered at n=600^3)
-        t.b = divide_over_two_units(1) * sizeof(S) + divide_over_two_units(2) * n * sizeof(double);
+        t.m = 2.0 * n;                                                                                                                                        //possibly large value (encoutered at n=600^3)
+        t.b = 1.0 * sizeof(S) + 2.0 * n * sizeof(double);
         apply_stencil3d(&S, x, res_vector);
       }
   }
