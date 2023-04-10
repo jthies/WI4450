@@ -75,10 +75,11 @@ typedef struct stencil3d
 
 } stencil3d;
 
-
 //! apply a 7-point stencil to a vector, v = op*x
 void apply_stencil3d(stencil3d const* op,
         double const* u, double* v);
 
 //v=s*u, where s a scalar and u,v vectors
 void apply_diagonalMatrix(int n, double s, double const* u, double* v);
+
+
