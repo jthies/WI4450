@@ -32,9 +32,9 @@ void axpby(int n, double a, double const* x, double b, double* y);
 //
 //   _ 
 // ^ /y
-//z|/  
+//z|/
 // +-->
-//   x 
+//   x
 //
 typedef struct stencil3d
 {
@@ -68,15 +68,18 @@ typedef struct stencil3d
   inline int index_s(int i, int j, int k) const {return index_c(i,   j-1, k);};
   //return the position in a vector where grid cell (i-1,j,k) is located
   inline int index_w(int i, int j, int k) const {return index_c(i-1, j,   k);};
-  //return the position in a vector where grid cell (i,j,k+1) is located
-  inline int index_b(int i, int j, int k) const {return index_c(i,   j, k-1);};
   //return the position in a vector where grid cell (i,j,k-1) is located
+  inline int index_b(int i, int j, int k) const {return index_c(i,   j, k-1);};
+  //return the position in a vector where grid cell (i,j,k+1) is located
   inline int index_t(int i, int j, int k) const {return index_c(i,   j, k+1);};
 
 } stencil3d;
 
-
 //! apply a 7-point stencil to a vector, v = op*x
 void apply_stencil3d(stencil3d const* op,
         double const* u, double* v);
+
+//v=s*u, where s a scalar and u,v vectors
+void apply_diagonalMatrix(int n, double s, double const* u, double* v);
+
 
