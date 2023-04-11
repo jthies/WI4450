@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
     
       {
         Timer t("apply_stencil3d");
-        t.m = 2.0 * n;                                                                                                                                        //possibly large value (encoutered at n=600^3)
+        t.m = (6 + 7)*(nx - 2)*(ny - 2)*(nz - 2) + (5 + 6)*2*((nx - 2)*(ny - 2)+(nx - 2)*(nz - 2)+(nz - 2)*(ny - 2)) + (4 + 5)*4*((nx - 2) + (ny - 2) + (nz - 2)) + (3 + 4)*8;                                                                                                                                        //possibly large value (encoutered at n=600^3)
         t.b = 1.0 * sizeof(S) + 2.0 * n * sizeof(double);
         apply_stencil3d(&S, x, res_vector);
       }
