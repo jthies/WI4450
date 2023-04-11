@@ -38,11 +38,15 @@ public:
   Timer(std::string label);
   ~Timer();
   static void summarize(std::ostream& os=std::cout);
+  double m; //vector size
+  double b; //amount of bytes of a type
 
 private:
 
   std::string label_;
   double t_start_;
+  static std::map<std::string, double> flops_;
+  static std::map<std::string, double> bytes_;
   static std::map<std::string, double> times_;
   static std::map<std::string, int> counts_;
 

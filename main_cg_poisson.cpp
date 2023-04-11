@@ -9,7 +9,7 @@
 #include <cmath>
 
 // Main program that solves the 3D Poisson equation
-// on a unit cube. The grid size (nx,ny,nz) can be 
+// on a unit cube. The grid size (nx,ny,nz) can be
 // passed to the executable like this:
 //
 // ./main_cg_poisson <nx> <ny> <nz>
@@ -51,96 +51,78 @@ stencil3d laplace3d_stencil(int nx, int ny, int nz)
 
 int main(int argc, char* argv[])
 {
-  // initialize MPI. This always has to be called first
-  // to set up the internal data structures of the library.
-  MPI_Init(&argc, &argv);
-  int nx, ny, nz;
-
-  if      (argc==1) {nx=128;           ny=128;           nz=128;}
-  else if (argc==2) {nx=atoi(argv[1]); ny=nx;            nz=nx;}
-  else if (argc==4) {nx=atoi(argv[1]); ny=atoi(argv[2]); nz=atoi(argv[3]);}
-  else {std::cerr << "Invalid number of arguments (should be 0, 1 or 3)"<<std::endl; exit(-1);}
-  if (ny<0) ny=nx;
-  if (nz<0) nz=nx;
-
-  // create the domain decomposition
-  decomp3d DD(nx, ny, nz);
-
-
-  if (rank==0)
   {
-    std::cout << "Domain decomposition:"<<std::endl;
-    std::cout << "Grid is           ["<<nx << " x "<< ny << " x " << nz << "]"<<std::endl;
-    std::cout << "Processor grid is ["<<DD.npx << " x "<<DD.npy<<" x "<<DD.npz << "]"<<std::endl;
-  }
-  // ordered printing for nicer output
-  for (int p=0; p<nproc; p++)
-  {
-    if (rank==p) std::cout << "Local grid on P"<<rank<<": [<<DD.nx_loc <<" x "<< DD.ny_loc <<" x "<<DD.nz_loc << "]"<<std::endl;
-    MPI_Barrier(MPI_COMM_WORLD);
-  }
+    Timer t("main_cg_solver");
+    int nx, ny, nz;
 
-  double dx=1.0/(nx-1), dy=1.0/(ny-1), dz=1.0/(nz-1);
+    if      (argc==1) {nx=128;           ny=128;           nz=128;}
+    else if (argc==2) {nx=atoi(argv[1]); ny=nx;            nz=nx;}
+    else if (argc==4) {nx=atoi(argv[1]); ny=atoi(argv[2]); nz=atoi(argv[3]);}
+    else {std::cerr << "Invalid number of arguments (should be 0, 1 or 3)"<<std::endl; exit(-1);}
+    if (ny<0) ny=nx;
+    if (nz<0) nz=nx;
 
-  // Laplace operator
-  stencil3d L = laplace3d_stencil(nx,ny,nz);
+    // total number of unknowns
+    int n=nx*ny*nz;
+    double dx=1.0/(nx-1), dy=1.0/(ny-1), dz=1.0/(nz-1);
 
-  // The stencil needs to take the decomp3d object along
-  // so that the offsets and neighbors can be determined
-  // inside the apply function
-  L.DD=DD;
+    // Laplace operator
+    stencil3d L = laplace3d_stencil(nx,ny,nz);
 
-  // total number of unknowns on this process:
-  int nloc=L.DD.nx_loc*L.DD.ny_loc*L.DD.nz_loc;
+    // solution vector: start with a 0 vector
+    double *x = new double[n];
+    init(n, x, 0.0);
 
-  // solution vector: start with a 0 vector
-  double *x = new double[n];
-  init(n, x, 0.0);
-
-  // right-hand side
-  double *b = new double[n];
-  init(n, b, 0.0);
+    // right-hand side
+    double *b = new double[n];
+    init(n, b, 0.0);
 
   // initialize the rhs with f(x,y,z) in the interior of the domain
-#pragma omp parallel for schedule(static)
-  for (int k=0; k<nz; k++)
-  {
-    double z = k*dz;
-    for (int j=0; j<ny; j++)
+    #pragma omp parallel for schedule(static)
+    for (int k=0; k<nz; k++)
     {
-      double y = j*dy;
-      for (int i=0; i<nx; i++)
+      double z = k*dz;
+      for (int j=0; j<ny; j++)
       {
-        double x = i*dx;
-        int idx = L.index_c(i,j,k);
-        b[idx] = f(x,y,z);
+        double y = j*dy;
+        for (int i=0; i<nx; i++)
+        {
+          double x = i*dx;
+          int idx = L.index_c(i,j,k);
+          b[idx] = f(x,y,z);
+        }
       }
     }
-  }
-  // Dirichlet boundary conditions at z=0 (others are 0 in our case, initialized above)
-  for (int j=0; j<ny; j++)
-    for (int i=0; i<nx; i++)
+    // Dirichlet boundary conditions at z=0 (others are 0 in our case, initialized above)
+    for (int j=0; j<ny; j++)
+      for (int i=0; i<nx; i++)
+      {
+        b[L.index_c(i,j,0)] -= L.value_b*g_0(i*dx, j*dy);
+      }
+
+    // solve the linear system of equations using CG
+    int numIter, maxIter=100;
+    double resNorm, tol=std::sqrt(std::numeric_limits<double>::epsilon());
+
+    try
     {
-      b[L.index_c(i,j,0)] -= L.value_b*g_0(i*dx, j*dy);
+      {
+        Timer t("cg_solver");
+        double sum = 0.0;
+        cg_solver(&L, n, x, b, tol, maxIter, &resNorm, &numIter);
+        for (int i = 0; i<n; i++) sum += std::pow(x[i],2);
+        sum = std::sqrt(sum);
+        std::cout<<"||x||_2 = "<<sum<<std::endl;
+      }
+    } catch(std::exception e)
+    {
+      std::cerr << "Caught an exception in cg_solve: " << e.what() << std::endl;
+      exit(-1);
     }
-
-  // solve the linear system of equations using CG
-  int numIter, maxIter=500;
-  double resNorm, tol=std::sqrt(std::numeric_limits<double>::epsilon());
-
-  try {
-  cg_solver(&L, n, x, b, tol, maxIter, &resNorm, &numIter);
-  } catch(std::exception e)
-  {
-    std::cerr << "Caught an exception in cg_solve: " << e.what() << std::endl;
-    exit(-1);
+    delete [] x;
+    delete [] b;
   }
-  delete [] x;
-  delete [] b;
-
   Timer::summarize();
 
-  // no MPI calls must be issued after this one...
-  MPI_Finalize();
   return 0;
 }
