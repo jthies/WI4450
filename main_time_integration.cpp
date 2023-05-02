@@ -30,9 +30,9 @@ stencil3d laplace3d_stencil(int nx, int ny, int nz)
   L.nx=nx; L.ny=ny; L.nz=nz;
   double dx=1.0/(nx-1), dy=1.0/(ny-1), dz=1.0/(nz-1);
   L.value_c = 2.0/(dx*dx) + 2.0/(dy*dy) + 2.0/(dz*dz);
-  L.value_n =  -1.0/(dy*dy);
+  L.value_n = -1.0/(dy*dy);
   L.value_e = -1.0/(dx*dx);
-  L.value_s =  -1.0/(dy*dy);
+  L.value_s = -1.0/(dy*dy);
   L.value_w = -1.0/(dx*dx);
   L.value_t = -1.0/(dz*dz);
   L.value_b = -1.0/(dz*dz);
@@ -64,13 +64,13 @@ int main(int argc, char* argv[])
   init(n, b, 1.0);
 
   // solve the linear system of equations using parallel forward euler
-  int numIter=0, maxIter=10;
+  int numIter=0, maxIter=40;
   double resNorm=10e6, tol=std::sqrt(std::numeric_limits<double>::epsilon());
-  double delta_t = 10e-1;
+  double delta_t = 10e-6;
 
-  // solution vector: start with a 1 vector
+  // solution vector: start with a 0 vector
   double *x = new double[n*maxIter];
-  init(n, x, 1.0);
+  init(n, x, 0.0);
 
   try {
   Timer t("time_integration");

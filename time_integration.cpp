@@ -66,7 +66,7 @@ void time_integration(stencil3d const* op, int n, double* x, double const* b,
         axpby(n, delta_t, Ax_j1, -1.0, x_j1);
       }
       
-      // x_j = x_j + x_j1
+      // x_j = x_j + x_j1 (x_j1 = -I + delta*L*x_{j-1})
       axpby(n, 1.0, x_j1, 1.0, x_j);
 
       // copy x_j into Ax
@@ -77,7 +77,7 @@ void time_integration(stencil3d const* op, int n, double* x, double const* b,
 
     // r = rhs - Ax
     axpby(n*maxIter, 1.0, rhs, 0.0, r); // first copy rhs to r
-    axpby(n*maxIter, 1.0, r, -1.0, Ax);
+    axpby(n*maxIter, -1.0, Ax, 1.0, r);
 
 
     // calculate norm of r and print it
