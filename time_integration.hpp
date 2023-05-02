@@ -7,7 +7,7 @@
 // operator. The function returns if the 2-norm of the residual reaches
 // tol, or the number of iterations reaches maxIter. The residual norm
 // is returned in *resNorm, the number of iterations in *numIter.
-void time_integration(stencil3d const* op, int n, double* x, double const* b,
-        double  tol, double delta_t,   int  maxIter,
+void time_integration(stencil3d const* op, int n, double* x, double const* x_0,
+        double  tol, double delta_t,   int  maxIter, int T,
         double* resNorm, int* numIter,
         int verbose=1);

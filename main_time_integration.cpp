@@ -64,17 +64,17 @@ int main(int argc, char* argv[])
   init(n, b, 1.0);
 
   // solve the linear system of equations using parallel forward euler
-  int numIter=0, maxIter=40;
+  int numIter=0, maxIter=10, T=40;
   double resNorm=10e6, tol=std::sqrt(std::numeric_limits<double>::epsilon());
   double delta_t = 10e-6;
 
   // solution vector: start with a 0 vector
-  double *x = new double[n*maxIter];
+  double *x = new double[n*T];
   init(n, x, 0.0);
 
   try {
   Timer t("time_integration");
-  time_integration(&L, n, x, b, tol, delta_t, maxIter, &resNorm, &numIter, 1.0);
+  time_integration(&L, n, x, b, tol, delta_t, maxIter,T, &resNorm, &numIter, 1.0);
   std::cout << std::setw(4) << maxIter << "\t" << std::setw(8) << std::setprecision(4) << resNorm << std::endl;
   } catch(std::exception e)
   {
