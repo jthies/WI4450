@@ -2,5 +2,6 @@
     "files.associations": {
         "new": "cpp",
         "iomanip": "cpp"
-    }
+    },
+    "C_Cpp.errorSquiggles": "disabled"
 }

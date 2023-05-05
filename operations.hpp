@@ -16,6 +16,8 @@ double dot(int n, double const* x, double const* y);
 // vector update: compute y[i] = a*x[i] + b*y[i] for 0<=i<n
 void axpby(int n, double a, double const* x, double b, double* y);
 
+void yAx(int n, double* y, double* A, double* x);
+
 //////////////////////////////////
 // Linear operator application  //
 //////////////////////////////////
@@ -74,6 +76,9 @@ typedef struct stencil3d
   inline int index_b(int i, int j, int k) const {return index_c(i,   j, k-1);};
 } stencil3d;
 
+//! apply a 7-point stencil to a vector, v = op*u in parallel
+void apply_stencil3d_parallel(stencil3d const* op,
+        double const* u, double* v);
 
 //! apply a 7-point stencil to a vector, v = op*u
 void apply_stencil3d(stencil3d const* op,

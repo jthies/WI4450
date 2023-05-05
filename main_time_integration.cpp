@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
 
   try {
   Timer t("time_integration");
-  time_integration(&L, n, x, b, tol, delta_t, maxIter,T, &resNorm, &numIter, 1.0);
+  time_integration_parallel_L_parallel_Jacobi(&L, n, x, b, tol, delta_t, maxIter,T, &resNorm, &numIter, 1.0);
   std::cout << std::setw(4) << maxIter << "\t" << std::setw(8) << std::setprecision(4) << resNorm << std::endl;
   } catch(std::exception e)
   {
