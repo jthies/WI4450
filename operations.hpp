@@ -7,6 +7,9 @@
 // Vector operations            //
 //////////////////////////////////
 
+// index of two dimensional array
+int index(int x, int y, int size_h);
+
 // initialize a vector with a constant value, x[i] = value for 0<=i<n
 void init(int n, double* x, double value);
 

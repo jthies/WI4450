@@ -59,22 +59,24 @@ int main(int argc, char* argv[])
   // Laplace operator
   stencil3d L = laplace3d_stencil(nx,ny,nz);
 
-  // initial value: initial value for the time integration method included in the rhs
-  double *b = new double[n];
-  init(n, b, 1.0);
-
   // solve the linear system of equations using parallel forward euler
   int numIter=0, maxIter=10, T=40;
   double resNorm=10e6, tol=std::sqrt(std::numeric_limits<double>::epsilon());
   double delta_t = 10e-6;
 
+  // initial value: initial value for the time integration method included in the rhs
+  double *b = new double[n*T];
+  init(n*T, b, 0.0);
+  init(n, b, 1.0);
+
   // solution vector: start with a 0 vector
   double *x = new double[n*T];
-  init(n, x, 0.0);
+  init(n*T, x, 1.0);
 
   try {
   Timer t("time_integration");
-  time_integration_parallel_L_parallel_Jacobi(&L, n, x, b, tol, delta_t, maxIter,T, &resNorm, &numIter, 1.0);
+  // time_integration_parallel_L_parallel_Jacobi(&L, n, x, b, tol, delta_t, maxIter,T, &resNorm, &numIter, 1.0);
+  time_integration_gmres(&L, n, x, b, tol, delta_t, maxIter, T, &resNorm);
   std::cout << std::setw(4) << maxIter << "\t" << std::setw(8) << std::setprecision(4) << resNorm << std::endl;
   } catch(std::exception e)
   {

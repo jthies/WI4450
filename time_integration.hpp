@@ -27,7 +27,9 @@ void time_integration_Jacobi(stencil3d const* op, int n, double* x, double const
         double* resNorm, int* numIter,
         int verbose=1);
 
-void time_integration_GMRES(stencil3d const* op, int n, double* x, double const* x_0,
-        double  tol, double delta_t,   int  maxIter, int T,
-        double* resNorm, int* numIter,
-        int verbose=1);
+// Calculate Ax when A consists of (-I+delta_t*op) on the lower diagonal and I on the diagonal
+void Ax_apply_stencil(const stencil3d *op, const double *x, double *Ax, int T, int n, double delta_t);
+
+void time_integration_gmres(stencil3d const* op, int n, double* x, const double* b,
+        double epsilon, double delta_t, int const maxIter, int T, 
+        double* resNorm);

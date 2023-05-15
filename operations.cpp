@@ -1,6 +1,10 @@
 #include "operations.hpp"
 #include <omp.h>
 
+int index(int x, int y, int size_h){
+    return x*size_h + y;
+}
+
 void init(int n, double* x, double value)
 {
   #pragma omp parallel for
