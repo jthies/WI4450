@@ -488,52 +488,55 @@ void time_integration_gmres(stencil3d const* op, int n, double* x, const double*
 
     // Q[:][0] = r_0/||r_0||^2
     for(int i=0; i<n*T; i++){
-          Q[index(i, 0, maxIter_p1)]= Ax[i]/r_norm;
-        }
+      Q[index(i, 0, n*T)]= Ax[i]/r_norm;
+    }
     // Perform the Arnoldi iteration
     for(int j=0; j<maxIter; j++){
       std::cout << "Iteratie " << j << std::endl;
       // Calculate A*Q[:,j] and put it into Q[:, j+1]
       // Put Q[:,j] into Q_j
       for (int i=0; i<n*T; i++){
-        Q_j[i] = Q[index(i,j,maxIter_p1)];
+        Q_j[i] = Q[index(i,j,n*T)];
       }
+
       Ax_apply_stencil(op, Q_j, AQ, T, n, delta_t);
+
       // Put AQ into Q[:,j+1]
       for (int i=0; i<n*T; i++){
-        Q[index(i,j+1,maxIter_p1)] = AQ[i];
+        Q[index(i,j+1,n*T)] = AQ[i];
       }
-      
+
       for (int i=0; i<=j; i++){
         // H[i][j] = Q[:][i]^T*Q[:,j+1]
         for (int k=0; k<n*T; k++){
-          H[index(i,j,maxIter)] += Q[index(k,i,maxIter_p1)]*Q[index(k,j+1,maxIter_p1)];
-          
+          // H[index(i,j,maxIter_p1)] += Q[index(k,i,n*T)]*Q[index(k,j+1,n*T)];
+          H[index(i,j,maxIter_p1)] += Q[index(k,i,n*T)]*AQ[k];
+        }
         
         // Q[:][j+1] = Q[:][j+1] - H[i][j]*Q[:,i]
-        
-          Q[index(k,j+1,maxIter_p1)] = Q[index(k,j+1,maxIter_p1)] - H[index(i,j,maxIter)]*Q[index(k,i,maxIter_p1)];
+        for (int k=0; k<n*T; k++){
+          Q[index(k,j+1,n*T)] = Q[index(k,j+1,n*T)] - H[index(i,j,maxIter_p1)]*Q[index(k,i,n*T)];
         }
       }
 
       // H[j+1][j] = norm(Q[:][j+1])
-      H[index(j+1,j,maxIter)] = 0.0;
+      H[index(j+1,j,maxIter_p1)] = 0.0;
       for (int k=0;k<n*T;k++){
-        H[index(j+1,j,maxIter)] += Q[index(k,j+1,maxIter_p1)]*Q[index(k,j+1,maxIter_p1)];
+        H[index(j+1,j,maxIter_p1)] += Q[index(k,j+1,n*T)]*Q[index(k,j+1,n*T)];
       }
-      H[index(j+1,j,maxIter)] = sqrt(H[index(j+1,j,maxIter)]);
+      H[index(j+1,j,maxIter_p1)] = sqrt(H[index(j+1,j,maxIter_p1)]);
       
 
       // Q[:][j+1] = Q[:][j+1]/H[j+1][j]
       for (int k=0;k<n*T;k++){
-        Q[index(k,j+1,maxIter_p1)] = Q[index(k,j+1,maxIter_p1)]/H[index(j+1,j,maxIter)];
+        Q[index(k,j+1,n*T)] = Q[index(k,j+1,n*T)]/H[index(j+1,j,maxIter_p1)];
       }
       
-
+      // Check if Q_i with Q_j+1 are orthonormal
       for (int i=0; i<=j+1; i++){
         double nor = 0.0;
         for (int k=0;k<n*T;k++){
-          nor += Q[index(k,i,maxIter_p1)]*Q[index(k,j+1,maxIter_p1)];
+          nor += Q[index(k,i,n*T)]*Q[index(k,j+1,n*T)];
         }
         std::cout << "norm" << nor << " ";
       }
@@ -541,7 +544,7 @@ void time_integration_gmres(stencil3d const* op, int n, double* x, const double*
       std::cout << "H and e_1 without Givens rotation" << std::endl;
       for (int i=0; i<maxIter_p1; i++){
           for (int k=0; k<maxIter; k++){
-              std::cout << H[index(i,k,maxIter)] << " ";
+              std::cout << H[index(i,k,maxIter_p1)] << " ";
           }
           std::cout << std::endl;
       }
@@ -552,69 +555,71 @@ void time_integration_gmres(stencil3d const* op, int n, double* x, const double*
       }
       std::cout << std::endl;
 
-      // Givens rotation on H_:j+2,:j+1 to make upper triangular matrix = R
-      denom = sqrt(H[index(j,j,maxIter)]*H[index(j,j,maxIter)] + H[index(j+1,j,maxIter)]*H[index(j+1,j,maxIter)]);
-      c = H[index(j,j,maxIter)]/ denom;
-      s = - H[index(j+1,j,maxIter)]/ denom;
-      for (int i = 0; i< maxIter; i++){
-        H_g[index(j,i,maxIter)] = c*H[index(j,i,maxIter)] + s*H[index(j+1,i,maxIter)];
-        H_g[index(j+1,i,maxIter)] =  -s*H[index(j,i,maxIter)] + c*H[index(j+1,i,maxIter)];
-      }
-      e_1_g[j] = c*e_1[j]+ s*e_1[j+1];
-      e_1_g[j+1] = -s*e_1[j] + c*e_1[j+1];
-      e_1[j] = e_1_g[j];
-      e_1[j+1] = e_1_g[j+1];
-      for (int i = 0; i< maxIter; i++){
-        H[index(j,i,maxIter)] = H_g[index(j,i,maxIter)];
-        H[index(j+1,i,maxIter)] = H_g[index(j+1,i,maxIter)];
-      }
+    //  // Givens rotation on H_:j+2,:j+1 to make upper triangular matrix = R
+    //   denom = sqrt(H[index(j,j,maxIter_p1)]*H[index(j,j,maxIter_p1)] + H[index(j+1,j,maxIter)]*H[index(j+1,j,maxIter)]);
+    //   c = H[index(j,j,maxIter)]/ denom;
+    //   s = - H[index(j+1,j,maxIter)]/ denom;
+    //   for (int i = 0; i< maxIter; i++){
+    //     H_g[index(j,i,maxIter)] = c*H[index(j,i,maxIter)] + s*H[index(j+1,i,maxIter)];
+    //     H_g[index(j+1,i,maxIter)] =  -s*H[index(j,i,maxIter)] + c*H[index(j+1,i,maxIter)];
+    //   }
+    //   e_1_g[j] = c*e_1[j]+ s*e_1[j+1];
+    //   e_1_g[j+1] = -s*e_1[j] + c*e_1[j+1];
+    //   e_1[j] = e_1_g[j];
+    //   e_1[j+1] = e_1_g[j+1];
+    //   for (int i = 0; i< maxIter; i++){
+    //     H[index(j,i,maxIter)] = H_g[index(j,i,maxIter)];
+    //     H[index(j+1,i,maxIter)] = H_g[index(j+1,i,maxIter)];
+    //   }
 
-      std::cout << "H with Givens rotation" << std::endl;
-      for (int i=0; i<maxIter+1; i++){
-          for (int k=0; k<maxIter; k++){
-              std::cout << H[index(i,k,maxIter)] << " ";
-          }
-          std::cout << std::endl;
-      }
+    //   std::cout << "H with Givens rotation" << std::endl;
+    //   for (int i=0; i<maxIter+1; i++){
+    //       for (int k=0; k<maxIter; k++){
+    //           std::cout << H[index(i,k,maxIter)] << " ";
+    //       }
+    //       std::cout << std::endl;
+    //   }
 
-      std::cout << "e_1 ";
-      for (int i = 0; i < maxIter; i++){
-        std::cout << e_1[i] << " ";
-      }
-      std::cout << std::endl;
+    //   std::cout << "e_1 ";
+    //   for (int i = 0; i < maxIter; i++){
+    //     std::cout << e_1[i] << " ";
+    //   }
+    //   std::cout << std::endl;
 
-      // Calculate y using backward substitution
-      for (int i = j+1-1; i >= 0; i--){
-        y[i] = e_1[i];
-        for (int k = i + 1; k < j+2-1; k++){
-            y[i] -= H[index(i,k,maxIter)] * y[k];
-        }
-        y[i] /= H[index(i,i,maxIter)];
-      }
-      std::cout << "y minnorm sol ";
-      for (int i = 0; i < j+1; i++){
-        std::cout << y[i] << " ";
-      }
-      std::cout << std::endl;
+    //   // Calculate y using backward substitution
+    //   for (int i = j+1-1; i >= 0; i--){
+    //     y[i] = e_1[i];
+    //     for (int k = i + 1; k < j+2-1; k++){
+    //         y[i] -= H[index(i,k,maxIter)] * y[k];
+    //     }
+    //     y[i] /= H[index(i,i,maxIter)];
+    //   }
+    //   std::cout << "y minnorm sol ";
+    //   for (int i = 0; i < j+1; i++){
+    //     std::cout << y[i] << " ";
+    //   }
+    //   std::cout << std::endl;
 
-      for (int i = 0; i < j+2-1; i++){
-        for (int k = 0; k < j+1-1; k++){
-          Ry[i] += H[index(i,k,maxIter)]*y[k];
-        }
-      }
-      axpby(j+2-1, 1.0, e_1, -1.0, Ry);
-      res = sqrt(dot(j+2-1, Ry, Ry));
-      if (res < epsilon){
-        for (int i = 0; i < n*T; i++){
-          for (int k = 0; k < j+1-1; k++){
-            sol[i] += Q[index(i,k,maxIter)]*y[k];
-          }
-        }
-        axpby(n*T,1.0,x,1.0,sol);
-        break;
-      } else{
-        std::cout << "residual " << res << std::endl;
-      }
+    //   for (int i = 0; i < j+2-1; i++){
+    //     for (int k = 0; k < j+1-1; k++){
+    //       Ry[i] += H[index(i,k,maxIter)]*y[k];
+    //     }
+    //   }
+    //   axpby(j+2-1, 1.0, e_1, -1.0, Ry);
+    //   res = sqrt(dot(j+2-1, Ry, Ry));
+    //   if (res < epsilon){
+    //     for (int i = 0; i < n*T; i++){
+    //       for (int k = 0; k < j+1-1; k++){
+    //         sol[i] += Q[index(i,k,maxIter)]*y[k];
+    //       }
+    //     }
+    //     axpby(n*T,1.0,x,1.0,sol);
+    //     break;
+    //   } else{
+    //     std::cout << "residual " << res << std::endl;
+    //   }
+
+
     }
 
     *resNorm = res;
