@@ -461,10 +461,10 @@ void time_integration_gmres(stencil3d const* op, int n, double* x, const double*
     double *Q = new double[n*T*maxIter_p1];
     double H[maxIter_p1*maxIter] = {0.0};
     double H_g[maxIter_p1*maxIter] = {0.0};
-    double Ry[maxIter_p1] = {0.0};
-    double e_1[maxIter_p1] = {0.0};
-    double e_1_g[maxIter_p1] = {0.0};
-    double sol[n*T] = {0.0};
+    double *Ry = new double[maxIter_p1];
+    double *e_1 = new double[maxIter_p1];
+    double *e_1_g = new double[maxIter_p1];
+    double *sol = new double[n*T];
     double *r = new double[n*T];
     double *Ax = new double[n*T];
     double *AQ = new double[n*T];
@@ -475,17 +475,17 @@ void time_integration_gmres(stencil3d const* op, int n, double* x, const double*
     double *y = new double[maxIter_p1](); // initialize y to 0
     double c = 0.0;
     double s = 0.0;
-    double beta = 0.0;
-    e_1[0] = beta;
 
     
-    // Set e_1 to be [1,0,...0]
-    e_1[0] = 1.0;
     // Ax = A*x
     Ax_apply_stencil(op, x, Ax, T, n, delta_t);
     // Ax (= r_0) = b - Ax
     axpby(n*T, 1.0, b, -1.0, Ax);
     r_norm = sqrt(dot(n*T, Ax, Ax));
+    // Set e_1 to be [beta,0,...0]
+    init(maxIter_p1, e_1, 0.0);
+    e_1[0] = r_norm;
+
     // Q[:][0] = r_0/||r_0||^2
     for(int i=0; i<n*T; i++){
           Q[index(i, 0, maxIter_p1)]= Ax[i]/r_norm;
@@ -502,7 +502,6 @@ void time_integration_gmres(stencil3d const* op, int n, double* x, const double*
       // Put AQ into Q[:,j+1]
       for (int i=0; i<n*T; i++){
         Q[index(i,j+1,maxIter_p1)] = AQ[i];
-        // std::cout << AQ[i] << " ";
       }
       
       // TODO misschien twee losse for loops
@@ -530,7 +529,8 @@ void time_integration_gmres(stencil3d const* op, int n, double* x, const double*
           Q[index(k,j+1,maxIter_p1)] = Q[index(k,j+1,maxIter_p1)]/H[index(j+1,j,maxIter)];
         }
       }
-      // Givens rotation on H to make upper triangular matrix
+
+      // Givens rotation on H_:j+2,:j+1 to make upper triangular matrix = R
       denom = sqrt(H[index(j,j,maxIter)]*H[index(j,j,maxIter)] + H[index(j+1,j,maxIter)]*H[index(j+1,j,maxIter)]);
       c = H[index(j,j,maxIter)]/ denom;
       s = - H[index(j+1,j,maxIter)]/ denom;
@@ -546,32 +546,56 @@ void time_integration_gmres(stencil3d const* op, int n, double* x, const double*
         H[index(j,i,maxIter)] = H_g[index(j,i,maxIter)];
         H[index(j+1,i,maxIter)] = H_g[index(j+1,i,maxIter)];
       }
-      for (int i = maxIter; i >= 0; i--){
+
+      std::cout << "H with Givens rotation" << std::endl;
+      for (int i=0; i<maxIter+1; i++){
+          for (int k=0; k<maxIter; k++){
+              std::cout << H[index(i,k,maxIter)] << " ";
+          }
+          std::cout << std::endl;
+      }
+
+      std::cout << "e_1 ";
+      for (int i = 0; i < maxIter; i++){
+        std::cout << e_1[i] << " ";
+      }
+      std::cout << std::endl;
+
+      // Calculate y using backward substitution
+      for (int i = j+1-1; i >= 0; i--){
         y[i] = e_1[i];
-        for (int k = i + 1; k < maxIter_p1; k++){
+        for (int k = i + 1; k < j+2-1; k++){
             y[i] -= H[index(i,k,maxIter)] * y[k];
         }
         y[i] /= H[index(i,i,maxIter)];
       }
-      for (int i = 0; i < maxIter_p1; i++){
-        for (int k = 0; k < maxIter; k++){
+      std::cout << "y minnorm sol ";
+      for (int i = 0; i < j+1; i++){
+        std::cout << y[i] << " ";
+      }
+      std::cout << std::endl;
+
+      for (int i = 0; i < j+2-1; i++){
+        for (int k = 0; k < j+1-1; k++){
           Ry[i] += H[index(i,k,maxIter)]*y[k];
         }
       }
-      axpby(maxIter_p1, 1.0, e_1, -1.0, Ry);
-      resNorm = sqrt(dot(maxIter_p1,Ry,Ry));
-    }
-    if (res < epsilon){
-      for (int i = 0; i < n*T; i++){
-        for (int k = 0; k < j+1; k++){
-          sol[i] += Q[index(i,k,maxIter)]*y[k];
+      axpby(j+2-1, 1.0, e_1, -1.0, Ry);
+      res = sqrt(dot(j+2-1, Ry, Ry));
+      if (res < epsilon){
+        for (int i = 0; i < n*T; i++){
+          for (int k = 0; k < j+1-1; k++){
+            sol[i] += Q[index(i,k,maxIter)]*y[k];
+          }
         }
+        axpby(n*T,1.0,x,1.0,sol);
+        break;
+      } else{
+        std::cout << "residual " << res << std::endl;
       }
-      axpby(maxIter_p1,1.0,x,1.0,sol);
-      return x, res;
     }
-    *resNorm = res;
 
+    *resNorm = res;
     delete [] Q;
     delete [] r;
     delete [] Ax;

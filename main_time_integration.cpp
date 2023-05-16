@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
   stencil3d L = laplace3d_stencil(nx,ny,nz);
 
   // solve the linear system of equations using parallel forward euler
-  int numIter=0, maxIter=10, T=40;
+  int numIter=0, maxIter=2, T=40;
   double resNorm=10e6, tol=std::sqrt(std::numeric_limits<double>::epsilon());
   double delta_t = 10e-6;
 
