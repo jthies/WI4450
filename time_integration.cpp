@@ -458,7 +458,7 @@ void apply_givens_to_H_e1(double* H, double* e_1, double c, double s, int j, int
 
 void time_integration_gmres(stencil3d const* op, int n, double* x, const double* b, double epsilon, double delta_t, int const maxIter, int T, double* resNorm){
     int const maxIter_p1 = maxIter + 1;
-    double *Q = new double[n*T*maxIter_p1];
+    double Q[n*T*maxIter_p1] = {0.0};
     double H[maxIter_p1*maxIter] = {0.0};
     double H_g[maxIter_p1*maxIter] = {0.0};
     double *Ry = new double[maxIter_p1];
@@ -504,31 +504,53 @@ void time_integration_gmres(stencil3d const* op, int n, double* x, const double*
         Q[index(i,j+1,maxIter_p1)] = AQ[i];
       }
       
-      // TODO misschien twee losse for loops
-      for (int i=0; i<j; i++){
+      for (int i=0; i<=j; i++){
         // H[i][j] = Q[:][i]^T*Q[:,j+1]
-        for (int k=0;k<n*T;k++){
+        for (int k=0; k<n*T; k++){
           H[index(i,j,maxIter)] += Q[index(k,i,maxIter_p1)]*Q[index(k,j+1,maxIter_p1)];
-        }
+          
+        
         // Q[:][j+1] = Q[:][j+1] - H[i][j]*Q[:,i]
-        for (int k=0;k<n*T;k++){
+        
           Q[index(k,j+1,maxIter_p1)] = Q[index(k,j+1,maxIter_p1)] - H[index(i,j,maxIter)]*Q[index(k,i,maxIter_p1)];
         }
       }
 
       // H[j+1][j] = norm(Q[:][j+1])
+      H[index(j+1,j,maxIter)] = 0.0;
       for (int k=0;k<n*T;k++){
         H[index(j+1,j,maxIter)] += Q[index(k,j+1,maxIter_p1)]*Q[index(k,j+1,maxIter_p1)];
       }
       H[index(j+1,j,maxIter)] = sqrt(H[index(j+1,j,maxIter)]);
+      
 
-      // Avoid dividing by zero
-      if (abs(H[index(j+1,j,maxIter)]) > epsilon) {
-        // Q[:][j+1] = Q[:][j+1]/H[j+1][j]
-        for (int k=0;k<n*T;k++){
-          Q[index(k,j+1,maxIter_p1)] = Q[index(k,j+1,maxIter_p1)]/H[index(j+1,j,maxIter)];
-        }
+      // Q[:][j+1] = Q[:][j+1]/H[j+1][j]
+      for (int k=0;k<n*T;k++){
+        Q[index(k,j+1,maxIter_p1)] = Q[index(k,j+1,maxIter_p1)]/H[index(j+1,j,maxIter)];
       }
+      
+
+      for (int i=0; i<=j+1; i++){
+        double nor = 0.0;
+        for (int k=0;k<n*T;k++){
+          nor += Q[index(k,i,maxIter_p1)]*Q[index(k,j+1,maxIter_p1)];
+        }
+        std::cout << "norm" << nor << " ";
+      }
+
+      std::cout << "H and e_1 without Givens rotation" << std::endl;
+      for (int i=0; i<maxIter_p1; i++){
+          for (int k=0; k<maxIter; k++){
+              std::cout << H[index(i,k,maxIter)] << " ";
+          }
+          std::cout << std::endl;
+      }
+
+      std::cout << "e_1 ";
+      for (int i = 0; i < j+1; i++){
+        std::cout << e_1[i] << " ";
+      }
+      std::cout << std::endl;
 
       // Givens rotation on H_:j+2,:j+1 to make upper triangular matrix = R
       denom = sqrt(H[index(j,j,maxIter)]*H[index(j,j,maxIter)] + H[index(j+1,j,maxIter)]*H[index(j+1,j,maxIter)]);
@@ -596,7 +618,6 @@ void time_integration_gmres(stencil3d const* op, int n, double* x, const double*
     }
 
     *resNorm = res;
-    delete [] Q;
     delete [] r;
     delete [] Ax;
     delete [] AQ;
