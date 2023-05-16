@@ -419,108 +419,157 @@ void Ax_apply_stencil(const stencil3d *op, const double *x, double *Ax, int T, i
   return;
 }
 
+void apply_givens_rotation(double& a, double& b, double& c, double& s) {
+  if (b == 0.0) {
+    c = 1.0;
+    s = 0.0;
+  } 
+  else {
+    if (abs(b) > abs(a)) {
+      double tau = -a / b;
+      s = 1.0 / sqrt(1.0 + tau * tau);
+      c = s * tau;
+    } else {
+      double tau = -b / a;
+      c = 1.0 / sqrt(1.0 + tau * tau);
+      s = c * tau;
+    }
+  }
+  // Apply rotation to a and b
+  double temp = c * a - s * b;
+  b = s * a + c * b;
+  a = temp;
+}
+
+void apply_givens_to_H_e1(double* H, double* e_1, double c, double s, int j, int j1, int maxIter_p1) {
+    for (int i = 0; i < maxIter_p1; ++i) {
+        double tempH = c * H[index(j, i, maxIter_p1)] - s * H[index(j1, i, maxIter_p1)];
+        H[index(j1, i, maxIter_p1)] = s * H[index(j, i, maxIter_p1)] + c * H[index(j1, i, maxIter_p1)];
+        H[index(j, i, maxIter_p1)] = tempH;
+    }
+
+    double tempe_1 = c * e_1[j] - s * e_1[j1];
+    e_1[j1] = s * e_1[j] + c * e_1[j];
+    e_1[j] = tempe_1;
+}
+
+
+
+
 void time_integration_gmres(stencil3d const* op, int n, double* x, const double* b, double epsilon, double delta_t, int const maxIter, int T, double* resNorm){
     int const maxIter_p1 = maxIter + 1;
     double *Q = new double[n*T*maxIter_p1];
     double H[maxIter_p1*maxIter] = {0.0};
+    double H_g[maxIter_p1*maxIter] = {0.0};
+    double Ry[maxIter_p1] = {0.0};
     double e_1[maxIter_p1] = {0.0};
+    double e_1_g[maxIter_p1] = {0.0};
+    double sol[n*T] = {0.0};
     double *r = new double[n*T];
     double *Ax = new double[n*T];
     double *AQ = new double[n*T];
     double *Q_j = new double[n*T];
     double r_norm = 1.0;
     double res = 1.0;
+    double denom = 0.0;
+    double *y = new double[maxIter_p1](); // initialize y to 0
+    double c = 0.0;
+    double s = 0.0;
+    double beta = 0.0;
+    e_1[0] = beta;
+
     
     // Set e_1 to be [1,0,...0]
     e_1[0] = 1.0;
-
     // Ax = A*x
     Ax_apply_stencil(op, x, Ax, T, n, delta_t);
-    // //print x
-    // for (int i=0; i<n*T; i++){
-    //   std::cout << x[i] << " ";
-    //   }
-    // std::cout << std::endl;
-
     // Ax (= r_0) = b - Ax
     axpby(n*T, 1.0, b, -1.0, Ax);
-    
     r_norm = sqrt(dot(n*T, Ax, Ax));
     // Q[:][0] = r_0/||r_0||^2
     for(int i=0; i<n*T; i++){
-           Q[index(i, 0, maxIter_p1)]= Ax[i]/r_norm;
+          Q[index(i, 0, maxIter_p1)]= Ax[i]/r_norm;
         }
     // Perform the Arnoldi iteration
     for(int j=0; j<maxIter; j++){
-        std::cout << "Iteratie " << j << std::endl;
-        // Calculate A*Q[:,j] and put it into Q[:, j+1]
-        // Put Q[:,j] into Q_j
-        for (int i=0; i<n*T; i++){
-            Q_j[i] = Q[index(i,j,maxIter_p1)];
-        }
-        Ax_apply_stencil(op, Q_j, AQ, T, n, delta_t);
-        // Put AQ into Q[:,j+1]
-        for (int i=0; i<n*T; i++){
-            Q[index(i,j+1,maxIter_p1)] = AQ[i];
-            // std::cout << AQ[i] << " ";
-        }
-        
-        // TODO misschien twee losse for loops
-        for (int i=0; i<j; i++){
-            // H[i][j] = Q[:][i]^T*Q[:,j+1]
-            for (int k=0;k<n*T;k++){
-                H[index(i,j,maxIter)] += Q[index(k,i,maxIter_p1)]*Q[index(k,j+1,maxIter_p1)];
-            }
-            // Q[:][j+1] = Q[:][j+1] - H[i][j]*Q[:,i]
-            for (int k=0;k<n*T;k++){
-                Q[index(k,j+1,maxIter_p1)] = Q[index(k,j+1,maxIter_p1)] - H[index(i,j,maxIter)]*Q[index(k,i,maxIter_p1)];
-            }
-        }
-
-        // H[j+1][j] = norm(Q[:][j+1])
+      std::cout << "Iteratie " << j << std::endl;
+      // Calculate A*Q[:,j] and put it into Q[:, j+1]
+      // Put Q[:,j] into Q_j
+      for (int i=0; i<n*T; i++){
+        Q_j[i] = Q[index(i,j,maxIter_p1)];
+      }
+      Ax_apply_stencil(op, Q_j, AQ, T, n, delta_t);
+      // Put AQ into Q[:,j+1]
+      for (int i=0; i<n*T; i++){
+        Q[index(i,j+1,maxIter_p1)] = AQ[i];
+        // std::cout << AQ[i] << " ";
+      }
+      
+      // TODO misschien twee losse for loops
+      for (int i=0; i<j; i++){
+        // H[i][j] = Q[:][i]^T*Q[:,j+1]
         for (int k=0;k<n*T;k++){
-            H[index(j+1,j,maxIter)] += Q[index(k,j+1,maxIter_p1)]*Q[index(k,j+1,maxIter_p1)];
+          H[index(i,j,maxIter)] += Q[index(k,i,maxIter_p1)]*Q[index(k,j+1,maxIter_p1)];
         }
-        H[index(j+1,j,maxIter)] = sqrt(H[index(j+1,j,maxIter)]);
-
-        // Avoid dividing by zero
-        if (abs(H[index(j+1,j,maxIter)]) > epsilon) {
-            // Q[:][j+1] = Q[:][j+1]/H[j+1][j]
-            for (int k=0;k<n*T;k++){
-                Q[index(k,j+1,maxIter_p1)] = Q[index(k,j+1,maxIter_p1)]/H[index(j+1,j,maxIter)];
-            }
-
-        } else{
-          
+        // Q[:][j+1] = Q[:][j+1] - H[i][j]*Q[:,i]
+        for (int k=0;k<n*T;k++){
+          Q[index(k,j+1,maxIter_p1)] = Q[index(k,j+1,maxIter_p1)] - H[index(i,j,maxIter)]*Q[index(k,i,maxIter_p1)];
         }
-        
-        // Solve for y: H[:j+2][:j+1]*y = beta*e_1
-        for (int k=0; k<maxIter+1; k++){
-          for (int i=0; i<maxIter; i++){
-                std::cout << std::setw(15) << H[index(k,i,maxIter)] << " ";
-            }
-            std::cout << std::endl;
+      }
+
+      // H[j+1][j] = norm(Q[:][j+1])
+      for (int k=0;k<n*T;k++){
+        H[index(j+1,j,maxIter)] += Q[index(k,j+1,maxIter_p1)]*Q[index(k,j+1,maxIter_p1)];
+      }
+      H[index(j+1,j,maxIter)] = sqrt(H[index(j+1,j,maxIter)]);
+
+      // Avoid dividing by zero
+      if (abs(H[index(j+1,j,maxIter)]) > epsilon) {
+        // Q[:][j+1] = Q[:][j+1]/H[j+1][j]
+        for (int k=0;k<n*T;k++){
+          Q[index(k,j+1,maxIter_p1)] = Q[index(k,j+1,maxIter_p1)]/H[index(j+1,j,maxIter)];
         }
-
-    // //     y = ...
-
-
-    // //     res = dot(n,)
-    // //     if (res < epsilon){
-    // //         for (int i=0;i<n;i++){
-    // //             for (int k=0;k<n;k++){
-    // //                 sol[i] = Q[i][k]*Y[k] + x0[i]
-    // //             }
-    // //         }
-    // //         return sol, res
-    // //     }
-
+      }
+      // Givens rotation on H to make upper triangular matrix
+      denom = sqrt(H[index(j,j,maxIter)]*H[index(j,j,maxIter)] + H[index(j+1,j,maxIter)]*H[index(j+1,j,maxIter)]);
+      c = H[index(j,j,maxIter)]/ denom;
+      s = - H[index(j+1,j,maxIter)]/ denom;
+      for (int i = 0; i< maxIter; i++){
+        H_g[index(j,i,maxIter)] = c*H[index(j,i,maxIter)] + s*H[index(j+1,i,maxIter)];
+        H_g[index(j+1,i,maxIter)] =  -s*H[index(j,i,maxIter)] + c*H[index(j+1,i,maxIter)];
+      }
+      e_1_g[j] = c*e_1[j]+ s*e_1[j+1];
+      e_1_g[j+1] = -s*e_1[j] + c*e_1[j+1];
+      e_1[j] = e_1_g[j];
+      e_1[j+1] = e_1_g[j+1];
+      for (int i = 0; i< maxIter; i++){
+        H[index(j,i,maxIter)] = H_g[index(j,i,maxIter)];
+        H[index(j+1,i,maxIter)] = H_g[index(j+1,i,maxIter)];
+      }
+      for (int i = maxIter; i >= 0; i--){
+        y[i] = e_1[i];
+        for (int k = i + 1; k < maxIter_p1; k++){
+            y[i] -= H[index(i,k,maxIter)] * y[k];
+        }
+        y[i] /= H[index(i,i,maxIter)];
+      }
+      for (int i = 0; i < maxIter_p1; i++){
+        for (int k = 0; k < maxIter; k++){
+          Ry[i] += H[index(i,k,maxIter)]*y[k];
+        }
+      }
+      axpby(maxIter_p1, 1.0, e_1, -1.0, Ry);
+      resNorm = sqrt(dot(maxIter_p1,Ry,Ry));
     }
-    // for (int i=0;i<n;i++){
-    //     for (int k=0;k<n;k++){
-    //         sol[i] = Q[i][k]*Y[k] + x0[i]
-    //     }
-    // }
+    if (res < epsilon){
+      for (int i = 0; i < n*T; i++){
+        for (int k = 0; k < j+1; k++){
+          sol[i] += Q[index(i,k,maxIter)]*y[k];
+        }
+      }
+      axpby(maxIter_p1,1.0,x,1.0,sol);
+      return x, res;
+    }
     *resNorm = res;
 
     delete [] Q;
