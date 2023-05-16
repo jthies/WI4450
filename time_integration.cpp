@@ -436,10 +436,16 @@ void time_integration_gmres(stencil3d const* op, int n, double* x, const double*
 
     // Ax = A*x
     Ax_apply_stencil(op, x, Ax, T, n, delta_t);
+    // //print x
+    // for (int i=0; i<n*T; i++){
+    //   std::cout << x[i] << " ";
+    //   }
+    // std::cout << std::endl;
 
     // Ax (= r_0) = b - Ax
     axpby(n*T, 1.0, b, -1.0, Ax);
-    r_norm = sqrt(dot(n, Ax, Ax));
+    
+    r_norm = sqrt(dot(n*T, Ax, Ax));
     // Q[:][0] = r_0/||r_0||^2
     for(int i=0; i<n*T; i++){
            Q[index(i, 0, maxIter_p1)]= Ax[i]/r_norm;
@@ -448,46 +454,50 @@ void time_integration_gmres(stencil3d const* op, int n, double* x, const double*
     for(int j=0; j<maxIter; j++){
         std::cout << "Iteratie " << j << std::endl;
         // Calculate A*Q[:,j] and put it into Q[:, j+1]
-        // Put Q[:,j] into Q_j and Q[:,]
+        // Put Q[:,j] into Q_j
         for (int i=0; i<n*T; i++){
             Q_j[i] = Q[index(i,j,maxIter_p1)];
         }
         Ax_apply_stencil(op, Q_j, AQ, T, n, delta_t);
         // Put AQ into Q[:,j+1]
-        for (int i=0; i<n; i++){
+        for (int i=0; i<n*T; i++){
             Q[index(i,j+1,maxIter_p1)] = AQ[i];
+            // std::cout << AQ[i] << " ";
         }
         
         // TODO misschien twee losse for loops
         for (int i=0; i<j; i++){
             // H[i][j] = Q[:][i]^T*Q[:,j+1]
-            for (int k=0;k<n;k++){
+            for (int k=0;k<n*T;k++){
                 H[index(i,j,maxIter)] += Q[index(k,i,maxIter_p1)]*Q[index(k,j+1,maxIter_p1)];
             }
             // Q[:][j+1] = Q[:][j+1] - H[i][j]*Q[:,i]
-            for (int k=0;k<n;k++){
+            for (int k=0;k<n*T;k++){
                 Q[index(k,j+1,maxIter_p1)] = Q[index(k,j+1,maxIter_p1)] - H[index(i,j,maxIter)]*Q[index(k,i,maxIter_p1)];
             }
         }
 
         // H[j+1][j] = norm(Q[:][j+1])
-        for (int k=0;k<n;k++){
-            H[index(j+1,j,maxIter)] = Q[index(k,j+1,maxIter_p1)]*Q[index(k,j+1,maxIter_p1)];
+        for (int k=0;k<n*T;k++){
+            H[index(j+1,j,maxIter)] += Q[index(k,j+1,maxIter_p1)]*Q[index(k,j+1,maxIter_p1)];
         }
         H[index(j+1,j,maxIter)] = sqrt(H[index(j+1,j,maxIter)]);
 
         // Avoid dividing by zero
         if (abs(H[index(j+1,j,maxIter)]) > epsilon) {
             // Q[:][j+1] = Q[:][j+1]/H[j+1][j]
-            for (int k=0;k<n;k++){
+            for (int k=0;k<n*T;k++){
                 Q[index(k,j+1,maxIter_p1)] = Q[index(k,j+1,maxIter_p1)]/H[index(j+1,j,maxIter)];
             }
+
+        } else{
+          
         }
         
         // Solve for y: H[:j+2][:j+1]*y = beta*e_1
-        for (int i=0; i<maxIter+1; i++){
-            for (int k=0; k<maxIter; k++){
-                std::cout << H[index(i,j,maxIter)] << " ";
+        for (int k=0; k<maxIter+1; k++){
+          for (int i=0; i<maxIter; i++){
+                std::cout << std::setw(15) << H[index(k,i,maxIter)] << " ";
             }
             std::cout << std::endl;
         }

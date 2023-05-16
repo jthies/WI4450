@@ -71,7 +71,7 @@ int main(int argc, char* argv[])
 
   // solution vector: start with a 0 vector
   double *x = new double[n*T];
-  init(n*T, x, 1.0);
+  init(n*T, x, 0.0);
 
   try {
   Timer t("time_integration");
