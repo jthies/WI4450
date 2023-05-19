@@ -51,8 +51,8 @@ void gmres(stencil3d const* L, const double* b, double* x0, int const maxIter, d
             Q_j[i] = Q[index(i, j, n * T)];
         }
         // Calculate A*Q[:,j]
-        //Ax_apply_stencil(L, Q_j, AQ, T, n, delta_t);
-        apply_stencil3d(L,Q_j,AQ);
+        Ax_apply_stencil(L, Q_j, AQ, T, n, delta_t);
+        //apply_stencil3d(L,Q_j,AQ);
         // Put AQ into Q[:,j+1]
         for (int i = 0; i < n * T; i++) {
             Q[index(i, j + 1, n * T)] = AQ[i];
@@ -96,6 +96,11 @@ void gmres(stencil3d const* L, const double* b, double* x0, int const maxIter, d
         e_1[j] = c * e_1[j];
         H[index(j+1, j, maxIter_p1)] = 0.0;
 
+        std::cout << "e_1 with Givens rotation" << std::endl;
+        for (int i = 0; i < maxIter; i++) {
+            std::cout << e_1[i] << " ";
+        }
+
         if ((std::abs(e_1[j + 1]) < epsilon) || (iter==maxIter)){
             iter = j;
             std::cout <<"Iterations Stopped"<< std::endl;
@@ -128,14 +133,15 @@ void gmres(stencil3d const* L, const double* b, double* x0, int const maxIter, d
         //std::cout << "sol["<<i<<"]:"<<sol[i]<<std::endl;
     }
     axpby(n*T, 1.0, x0, 1.0, sol);
-    //Ax_apply_stencil(L, y, sol, T, n, delta_t);
-    apply_stencil3d(L,sol,Asol);
+    Ax_apply_stencil(L,sol, Asol, T, n, delta_t);
+    //apply_stencil3d(L,sol,Asol);
     
     axpby(n*T, 1.0, b, -1.0, Asol);
     for (int i = 0; i < n * T; i++) {
         res +=  Asol[i]*Asol[i];
     }
     res = sqrt(res);
+    std::cout << "residual:"<<res<<std::endl;
     *resNorm = res;
     
 }

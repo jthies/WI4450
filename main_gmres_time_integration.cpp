@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
   {Timer t("main");
   int nx, ny, nz;
 
-  if      (argc==1) {nx=8;           ny=8;           nz=8;}
+  if      (argc==1) {nx=128;           ny=128;           nz=128;}
   else if (argc==2) {nx=atoi(argv[1]); ny=nx;            nz=nx;}
   else if (argc==4) {nx=atoi(argv[1]); ny=atoi(argv[2]); nz=atoi(argv[3]);}
   else {std::cerr << "Invalid number of arguments (should be 0, 1 or 3)"<<std::endl; exit(-1);}
@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
   stencil3d L = laplace3d_stencil(nx,ny,nz);
 
   // solve the linear system of equations using parallel forward euler
-  int numIter=0, maxIter=40, T=1;
+  int numIter=0, maxIter=10, T=20;
   double resNorm=10e6, tol=std::sqrt(std::numeric_limits<double>::epsilon());
   double delta_t = 10e-2;
   std::cout << "tol: " <<tol<< std::endl;
