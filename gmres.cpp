@@ -32,8 +32,8 @@ void gmres(stencil3d const* L, const double* b, double* x0, int const maxIter, d
 
     // Ax = A*x0 --> NOTE: with x0 = 0, Ax = 0 and this computation is not necessary 
     Ax_apply_stencil(L, x0, Ax, T, n, delta_t);
-    // apply_stencil3d(L,x0,Ax);
-    // r_0 (= Ax) = b - Ax
+    
+    // r_0 (=: Ax) = b - Ax
     axpby(n * T, 1.0, b, -1.0, Ax);
     r_norm = sqrt(dot(n * T, Ax, Ax));
     b_norm = sqrt(dot(n * T, b, b));
@@ -76,11 +76,17 @@ void gmres(stencil3d const* L, const double* b, double* x0, int const maxIter, d
             H[index(j + 1, j, maxIter_p1)] += Q[index(k, j + 1, n * T)] * Q[index(k, j + 1, n * T)];
         }
         H[index(j + 1, j, maxIter_p1)] = sqrt(H[index(j + 1, j, maxIter_p1)]);
-        // Q[:][j+1] = Q[:][j+1]/H[j+1][j]
-        for (int k = 0; k < n * T; k++) {
-            Q[index(k, j + 1, n * T)] /= H[index(j + 1, j, maxIter_p1)];
+        
+        if (H[index(j + 1, j, maxIter_p1)] > epsilon*1e-5){
+            // Q[:][j+1] = Q[:][j+1]/H[j+1][j]
+            for (int k = 0; k < n * T; k++) {
+                Q[index(k, j + 1, n * T)] /= H[index(j + 1, j, maxIter_p1)];
+            }
+        } else {
+            std::cout << "Stopped since H[j+1,j] < epsilon" << std::endl;
         }
 
+        // Remember the e_1 and H as they are original/
         double H_origin[maxIter_p1 * maxIter] = {0.0};
         double e_1_origin[maxIter_p1] = {0.0}; 
         for(int l = 0; l < maxIter_p1 * maxIter; l++){
@@ -111,24 +117,49 @@ void gmres(stencil3d const* L, const double* b, double* x0, int const maxIter, d
         //     std::cout << e_1[i] << " ";
         // }
 
-        std::cout << "error iteration " << j << " is " << std::abs(e_1[j + 1])/b_norm << std::endl;
+        // // //Print H with the Givens rotation
+        // std::cout << "H with Givens rotation" << std::endl;
+        // for (int i = 0; i < maxIter_p1; i++) {
+        //     for (int k = 0; k < maxIter; k++) {
+        //         std::cout << H[index(i, k, maxIter_p1)] << " ";
+        //     }
+        //     std::cout << std::endl;
+        // }
 
-        if (iter==maxIter){
-        // if ((std::abs(e_1[j + 1])/b_norm < epsilon) || (iter==maxIter)){
+        std::cout << "error iteration " << j << " is " << std::abs(e_1[j])/b_norm << std::endl;
+
+        // if (iter==maxIter){
+        if ((std::abs(e_1[j+1])/b_norm < epsilon) || (iter==maxIter)){
             iter = j;
             std::cout <<"Iterations Stopped"<< std::endl;
             std::cout <<"Iter:"<<iter << std::endl;
             std::cout <<"Epsilon:"<<epsilon << std::endl;
-            std::cout <<"abs(e_1[j+1]):"<<std::abs(e_1[j + 1]) << std::endl;
+            std::cout <<"abs(e_1[j+1]):"<<std::abs(e_1[j+1]) << std::endl;
             break;
         }
     }
+
+    // //Print e_1 with the Givens rotation
+    // std::cout << "e_1 with Givens rotation" << std::endl;
+    // for (int i = 0; i < maxIter; i++) {
+    //     std::cout << e_1[i] << " ";
+    // }
+    // std::cout << std::endl;
+
+    // // //Print H with the Givens rotation
+    // std::cout << "H with Givens rotation" << std::endl;
+    // for (int i = 0; i < maxIter_p1; i++) {
+    //     for (int k = 0; k < maxIter; k++) {
+    //         std::cout << H[index(i, k, maxIter_p1)] << " ";
+    //     }
+    //     std::cout << std::endl;
+    // }
 
     // Back substitution
     y[iter] = e_1[iter]/H[index(iter, iter, maxIter_p1)];
     for (int i=(iter-1); i>=0; i--){
         y[i] = e_1[i];        
-        for (int j=i+1; j<=iter+2; j++){
+        for (int j=i+1; j <= iter; j++){
             y[i] -= H[index(i, j, maxIter_p1)]*y[j];
         }           
         y[i] = y[i] / H[index(i, i, maxIter_p1)];
@@ -141,30 +172,37 @@ void gmres(stencil3d const* L, const double* b, double* x0, int const maxIter, d
     }
     std::cout << std::endl;
 
+    // // Print Q[:,:j+1]
+    // std::cout << "Q[:,:j+1]" << std::endl;
+    // for (int i = 0; i < n*T; i++) {
+    //     for (int k = 0; k < iter + 1; k++) {
+    //         std::cout << Q[index(i, k, maxIter_p1)] << " ";
+    //     }
+    //     std::cout << std::endl;
+    // }
+
+
     // Actual solution Qy calculation with Q
+    init(n * T, sol, 0.0);
     for (int i = 0; i < n * T; i++) {
-        sol[i] = 0.0;
-        for (int k = 0; k < iter + 1; k++) {
+        for (int k = 0; k <= iter + 1; k++) {
             sol[i] += Q[index(i, k, maxIter_p1)] * y[k];
         }
-        //std::cout << "sol["<<i<<"]:"<<sol[i]<<std::endl;
+        // std::cout << "sol["<<i<<"]:"<<sol[i]<<std::endl;
     }
     // sol = Qy + x0
-    axpby(n*T, 1.0, x0, 1.0, sol);
+    axpby(n * T, 1.0, x0, 1.0, sol);
 
     // Calculate residual b - A*sol
     init(n * T, Asol, 0);
     Ax_apply_stencil(L, sol, Asol, T, n, delta_t);
-    //apply_stencil3d(L,sol,Asol);
     axpby(n*T, 1.0, b, -1.0, Asol);
 
     // Calculate residual norm
-    res = 0.0;
-    for (int i = 0; i < n * T; i++) {
-        res +=  Asol[i]*Asol[i];
-    }
-    res = sqrt(res)/r_norm;
-    std::cout << "relative residual:"<<res<<std::endl;
+    res = sqrt(dot(n*T, Asol, Asol));
+    // res = sqrt(res)/r_norm;
+    std::cout << "residual (from b-Ax):"<< res <<std::endl;
+    std::cout << "residual (from e_1[j+1]):"<< e_1[iter+1] <<std::endl;
     *resNorm = res;
     
 }

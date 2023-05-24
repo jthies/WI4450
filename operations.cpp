@@ -1,8 +1,8 @@
 #include "operations.hpp"
 #include <omp.h>
 
-int index(int x, int y, int size_h){
-    return x + y*size_h;
+int index(int x, int y, int no_rows){
+    return x + y*no_rows;
 }
 
 void init(int n, double* x, double value)
