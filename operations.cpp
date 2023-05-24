@@ -88,3 +88,42 @@ void apply_stencil3d(stencil3d const* S,
   return;
 }
 
+void Ax_apply_stencil(const stencil3d *op, const double *x, double *Ax, int T, int n, double delta_t){
+  #pragma omp parallel for
+  for (int k=0; k<T; k++){
+    double *x_k_min_1 = new double[n];
+    double *x_k = new double[n];
+    double *Lx_k_min_1 = new double[n];
+    // copy x[k*n to (k+1)*n] into x_k
+    for(int l=k*n; l<(k+1)*n; l++){
+        x_k[l-k*n] = x[l];
+      }
+    // Initialize the previous vector with zeros for the first time step
+    if (k==0){
+      init(n, x_k_min_1, 0);
+    } 
+    // Copy the previous timestep solution into x_k_min_1
+    else {
+      // copy x[(k-1)*n to k*n] into x_k_min_1
+      for(int l=(k-1)*n; l<k*n; l++){
+        x_k_min_1[l-(k-1)*n] = x[l];
+      }
+      // Lx_k_min_1 = op*x_k_min_1 (L is the operator)
+      apply_stencil3d(op, x_k_min_1, Lx_k_min_1);
+      // x_k_min_1 = - x_k_min_1 + delta_t*Lx_k_min_1
+      axpby(n, delta_t, Lx_k_min_1, -1.0, x_k_min_1);
+    }
+    // x_k = x_k + x_k_min_1 = x_k - x_k_min_1 + delta_t*Lx_k_min_1
+    axpby(n, 1.0, x_k_min_1, 1.0, x_k);
+
+    // Copy x_k into Ax
+    for(int l=k*n; l<(k+1)*n; l++){
+        Ax[l] = x_k[l-k*n];
+    }
+    delete [] x_k_min_1;
+    delete [] x_k;
+    delete [] Lx_k_min_1;
+  }
+  return;
+}
+

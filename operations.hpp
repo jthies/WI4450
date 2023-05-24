@@ -87,3 +87,8 @@ void apply_stencil3d_parallel(stencil3d const* op,
 void apply_stencil3d(stencil3d const* op,
         double const* u, double* v);
 
+//! apply a 7 point stencil for T timesteps in parallel
+// Calculate Ax when A consists of (-I+delta_t*op) on the lower diagonal and I on the diagonal
+void Ax_apply_stencil(const stencil3d *op, const double *x, double *Ax, int T, int n, double delta_t);
+
+
