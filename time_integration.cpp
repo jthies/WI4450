@@ -593,7 +593,7 @@ void time_integration_gmres(stencil3d const* L, int n, double* x0, const double*
     init(n * T, sol, 0.0);
     for (int i = 0; i < n * T; i++) {
         for (int k = 0; k <= iter + 1; k++) {
-            sol[i] += Q[index(i, k, maxIter_p1)] * y[k];
+            sol[i] += Q[index(i, k, n * T)] * y[k];
         }
         // std::cout << "sol["<<i<<"]:"<<sol[i]<<std::endl;
     }
@@ -608,8 +608,8 @@ void time_integration_gmres(stencil3d const* L, int n, double* x0, const double*
     // Calculate residual norm
     res = sqrt(dot(n*T, Asol, Asol));
     // res = sqrt(res)/r_norm;
-    std::cout << "residual (from b-Ax):"<< res <<std::endl;
-    std::cout << "residual (from e_1[j+1]):"<< std::abs(e_1[iter]) <<std::endl;
+    std::cout << "relative residual (from b-Ax):"<< res/r_norm <<std::endl;
+    std::cout << "relative residual (from e_1[j+1]):"<< std::abs(e_1[iter])/r_norm <<std::endl;
     *resNorm = res;
 
     delete [] sol;
