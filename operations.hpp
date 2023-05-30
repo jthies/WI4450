@@ -91,4 +91,10 @@ void apply_stencil3d(stencil3d const* op,
 // Calculate Ax when A consists of (-I+delta_t*op) on the lower diagonal and I on the diagonal
 void Ax_apply_stencil(const stencil3d *op, const double *x, double *Ax, int T, int n, double delta_t);
 
+// Print a vector of size n
+void print_vector(int n, double const* x);
 
+// Print a matrix with n rows and m columns
+void print_matrix(int n, int m, double const* A);
+
+void given_rotation(int k, double* h, double* cs, double* sn, int maxIter_p1);

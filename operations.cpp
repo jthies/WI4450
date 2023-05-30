@@ -1,8 +1,13 @@
 #include "operations.hpp"
 #include <omp.h>
 
+#include <cmath>
+#include <stdexcept>
+#include <iostream>
+#include <iomanip>
+
 int index(int x, int y, int no_rows){
-    return x + y*no_rows;
+    return (int) (x + y*no_rows);
 }
 
 void init(int n, double* x, double value)
@@ -89,7 +94,7 @@ void apply_stencil3d(stencil3d const* S,
 }
 
 void Ax_apply_stencil(const stencil3d *op, const double *x, double *Ax, int T, int n, double delta_t){
-  #pragma omp parallel for
+  // #pragma omp parallel for
   for (int k=0; k<T; k++){
     double *x_k_min_1 = new double[n];
     double *x_k = new double[n];
@@ -110,8 +115,10 @@ void Ax_apply_stencil(const stencil3d *op, const double *x, double *Ax, int T, i
       }
       // Lx_k_min_1 = op*x_k_min_1 (L is the operator)
       apply_stencil3d(op, x_k_min_1, Lx_k_min_1);
+      // x_k_min_1 = - x_k_min_1 - delta_t*Lx_k_min_1
+      axpby(n, -delta_t, Lx_k_min_1, -1.0, x_k_min_1);
       // x_k_min_1 = - x_k_min_1 + delta_t*Lx_k_min_1
-      axpby(n, delta_t, Lx_k_min_1, -1.0, x_k_min_1);
+      // axpby(n, delta_t, Lx_k_min_1, -1.0, x_k_min_1);
     }
     // x_k = x_k + x_k_min_1 = x_k - x_k_min_1 + delta_t*Lx_k_min_1
     axpby(n, 1.0, x_k_min_1, 1.0, x_k);
@@ -124,6 +131,51 @@ void Ax_apply_stencil(const stencil3d *op, const double *x, double *Ax, int T, i
     delete [] x_k;
     delete [] Lx_k_min_1;
   }
+  return;
+}
+
+void print_vector(int n, double const* x){
+  for (int i=0;i<n;i++){
+    std::cout << x[i] << ", ";
+  }
+  std::cout << std::endl;
+}
+
+void print_matrix(int n, int m, double const* A){
+  std::cout << "[";
+  for (int i=0;i<n;i++){
+    std::cout << " [";
+    for (int j=0;j<m;j++){
+      std::cout << std::setw(10) << std::setprecision(4) << A[index(i,j,n)];
+      if (j<m-1){
+        std::cout << ",";
+      }
+    }
+    std::cout << "]," << std::endl;
+  }
+  std::cout << "]" << std::endl;
+}
+
+// apply given rotation
+void given_rotation(int k, double* h, double* cs, double* sn, int maxIter_p1)
+{
+  double temp, t, cs_k, sn_k;
+  for (int i=0; i<k; i++)
+  {
+     temp = cs[i] * h[index(i,k,maxIter_p1)] + sn[i] * h[index(i+1,k,maxIter_p1)];
+     h[index(i+1, k, maxIter_p1)] = -sn[i] * h[index(i, k, maxIter_p1)] + cs[i] * h[index(i+1, k, maxIter_p1)];
+     h[index(i, k, maxIter_p1)] = temp;
+  }
+  
+  // update the next sin cos values for rotation
+  t = std::sqrt( h[index(k, k, maxIter_p1)]*h[index(k, k, maxIter_p1)] + h[index(k+1, k, maxIter_p1)]*h[index(k+1, k, maxIter_p1)] );
+  cs[k] = h[index(k, k, maxIter_p1)]/t;
+  sn[k] = h[index(k+1, k, maxIter_p1)]/t;
+
+  // eliminate h(i+1,i)
+  h[index(k, k, maxIter_p1)] = cs[k]*h[index(k, k, maxIter_p1)] + sn[k]*h[index(k+1, k, maxIter_p1)];
+  h[index(k+1, k, maxIter_p1)] = 0.0;
+
   return;
 }
 
