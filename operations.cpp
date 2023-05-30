@@ -82,7 +82,7 @@ void matrix_col_scale(int n, int const j, double a, double* Q){
 
 void orthogonalize_Q(int n, int n_H, int const i,int const j,double *Q,double const* H){
   for (int k = 0; k < n ; k++) {
-    Q[index(k, j, n)] -= H[index(i, j, n_H)] * Q[index(k, i, n)];
+    Q[index(k, j+1, n)] -= H[index(i, j, n_H)] * Q[index(k, i, n)];
   }
 }
 

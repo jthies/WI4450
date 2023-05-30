@@ -473,9 +473,10 @@ void time_integration_gmres(stencil3d const* L, int n, double* x0, const double*
         // H[i][j] = Q[:][i]^T*Q[:,j+1]
         H[index(i, j, maxIter_p1)] = matrix_col_vec_dot(n*T, i, AQ, Q);
         // Q[:][j+1] = Q[:][j+1] - H[i][j]*Q[:,i]
-        for (int k = 0; k < n * T; k++) {
-            Q[index(k, j + 1, n * T)] -= H[index(i, j, maxIter_p1)] * Q[index(k, i, n * T)];
-        }
+        orthogonalize_Q(n*T,maxIter_p1,i,j,Q,H);
+        // for (int k = 0; k < n * T; k++) {
+        //     Q[index(k, j + 1, n * T)] -= H[index(i, j, maxIter_p1)] * Q[index(k, i, n * T)];
+        // }
     }
     // H[j+1][j] = ||Q[:][j+1]||_2
     H[index(j + 1, j, maxIter_p1)] = sqrt(matrix_col_dot(n*T,j+1,Q));
