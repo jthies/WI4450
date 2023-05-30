@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
   }
   delete [] x;
   }
-  // Timer::summarize();
+  Timer::summarize();
 
   return 0;
 }
