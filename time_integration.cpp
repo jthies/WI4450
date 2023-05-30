@@ -480,12 +480,12 @@ void time_integration_gmres(stencil3d const* L, int n, double* x0, const double*
     }
     // H[j+1][j] = ||Q[:][j+1]||_2
     H[index(j + 1, j, maxIter_p1)] = sqrt(matrix_col_dot(n*T,j+1,Q));
-    if (H[index(j + 1, j, maxIter_p1)] > epsilon*1e-5){
+    if (H[index(j + 1, j, maxIter_p1)] != 0){
         // Q[:][j+1] = Q[:][j+1]/H[j+1][j]
         matrix_col_scale(n*T,j+1,H[index(j + 1, j, maxIter_p1)],Q);
     } 
     else {
-        std::cout << "Stopped since H[j+1,j] < epsilon" << std::endl;
+        std::cout << "H[j+1,j] = 0" << std::endl;
     }
 
         // Remember the e_1 and H as they are original/
@@ -496,58 +496,26 @@ void time_integration_gmres(stencil3d const* L, int n, double* x0, const double*
         }
         e_1_origin[0] = r_norm;
     
-        // Givens rotation on H_:j+2,:j+1 to make upper triangular matrix = R
-        // for (int k = 0; k < j+2; k++){
-
-        //   denom = sqrt(H[index(k,k, maxIter_p1)] * H[index(k,k, maxIter_p1)] + H[index(k + 1, k, maxIter_p1)] * H[index(k + 1, k, maxIter_p1)]);
-        //   c = H[index(k, k, maxIter_p1)] / denom;
-        //   s = H[index(k + 1, k, maxIter_p1)] / denom;
-        //   for (int i = 0; i < maxIter; i++) {
-        //       H_g[index(k, i, maxIter_p1)] = c * H[index(k, i, maxIter_p1)] + s * H[index(k + 1, i, maxIter_p1)];
-        //       H_g[index(k + 1, i, maxIter_p1)] = -s * H[index(k, i, maxIter_p1)] + c * H[index(k + 1, i, maxIter_p1)];
-        //   }
-        //   // for (int i = 0; i < maxIter; i++) {
-        //   //     H[index(k, i, maxIter_p1)] = H_g[index(k, i, maxIter_p1)];
-        //   //     H[index(k+1, i, maxIter_p1)] = H_g[index(k+1, i, maxIter_p1)];
-        //   // }
-        //   e_1_g[k + 1] = -s * e_1[k];
-        //   e_1_g[k] = c * e_1[k];
-        //   H_g[index(k+1, k, maxIter_p1)] = 0.0;
-        // }
-        
+        // Givens rotation on H_:j+2,:j+1 to make upper triangular matrix = R        
         given_rotation(j, H, cs, sn, maxIter_p1);
-
-        // denom = sqrt(H[index(j, j, maxIter_p1)] * H[index(j, j, maxIter_p1)] + H[index(j + 1, j, maxIter_p1)] * H[index(j + 1, j, maxIter_p1)]);
-        // c = H[index(j, j, maxIter_p1)] / denom;
-        // s = H[index(j + 1, j, maxIter_p1)] / denom;
-        
-        // for (int i = 0; i < maxIter; i++) {
-        //     H_g[index(j, i, maxIter_p1)] = c * H[index(j, i, maxIter_p1)] + s * H[index(j + 1, i, maxIter_p1)];
-        //     H_g[index(j + 1, i, maxIter_p1)] = -s * H[index(j, i, maxIter_p1)] + c * H[index(j + 1, i, maxIter_p1)];
-        // }
-        // for (int i = 0; i < maxIter; i++) {
-        //     H[index(j, i, maxIter_p1)] = H_g[index(j, i, maxIter_p1)];
-        //     H[index(j+1, i, maxIter_p1)] = H_g[index(j+1, i, maxIter_p1)];
-        // }
 
         e_1[j + 1] = -sn[j] * e_1[j];
         e_1[j] = cs[j] * e_1[j];
-        // H[index(j+1, j, maxIter_p1)] = 0.0;
 
-        //Print e_1 with the Givens rotation
-        std::cout << "e_1 with Givens rotation" << std::endl;
-        for (int i = 0; i < maxIter; i++) {
-            std::cout << e_1[i] << " ";
-        }
+        // //Print e_1 with the Givens rotation
+        // std::cout << "e_1 with Givens rotation" << std::endl;
+        // for (int i = 0; i < maxIter; i++) {
+        //     std::cout << e_1[i] << " ";
+        // }
 
-        // //Print H with the Givens rotation
-        std::cout << "H with Givens rotation" << std::endl;
-        for (int i = 0; i < maxIter_p1; i++) {
-            for (int k = 0; k < maxIter; k++) {
-                std::cout << H[index(i, k, maxIter_p1)] << " ";
-            }
-            std::cout << std::endl;
-        }
+        // // //Print H with the Givens rotation
+        // std::cout << "H with Givens rotation" << std::endl;
+        // for (int i = 0; i < maxIter_p1; i++) {
+        //     for (int k = 0; k < maxIter; k++) {
+        //         std::cout << H[index(i, k, maxIter_p1)] << " ";
+        //     }
+        //     std::cout << std::endl;
+        // }
 
         std::cout << "error iteration " << j << " is " << std::abs(e_1[j])/b_norm << std::endl;
 
@@ -561,56 +529,19 @@ void time_integration_gmres(stencil3d const* L, int n, double* x0, const double*
             break;
         }
 
-        iter = j;
-        // Back substitution
-        init(n*T, y, 0);
-        y[iter] = e_1[iter]/H[index(iter, iter, maxIter_p1)];
-        for (int i=(iter-1); i>=0; i--){
-            y[i] = e_1[i];        
-            for (int j=i+1; j <= iter; j++){
-                y[i] -= H[index(i, j, maxIter_p1)]*y[j];
-            }           
-            y[i] = y[i] / H[index(i, i, maxIter_p1)];
-        }
-
-        // Print the solution for the least squares problem.
-        std::cout << "y minnorm sol ";
-        for (int i = 0; i < iter + 1; i++) {
-            std::cout << y[i] << " ";
-        }
-        std::cout << std::endl;
-
-
     }
 
-    // //Print e_1 with the Givens rotation
-    // std::cout << "e_1 with Givens rotation" << std::endl;
-    // for (int i = 0; i < maxIter; i++) {
-    //     std::cout << e_1[i] << " ";
-    // }
-    // std::cout << std::endl;
-
-    // // //Print H with the Givens rotation
-    // std::cout << "H with Givens rotation" << std::endl;
-    // for (int i = 0; i < maxIter_p1; i++) {
-    //     for (int k = 0; k < maxIter; k++) {
-    //         std::cout << H[index(i, k, maxIter_p1)] << " ";
-    //     }
-    //     std::cout << std::endl;
-    // }
-
     // Back substitution
+    init(n*T, y, 0);
+    y[iter] = e_1[iter]/H[index(iter, iter, maxIter_p1)];
+    for (int i=(iter-1); i>=0; i--){
+        y[i] = e_1[i];        
+        for (int j=i+1; j <= iter; j++){
+            y[i] -= H[index(i, j, maxIter_p1)]*y[j];
+        }           
+        y[i] = y[i] / H[index(i, i, maxIter_p1)];
+    }
 
-
-    // !!!!!!!!!!!!!!!!!
-
-
-  // Print the solution for the least squares problem.
-  std::cout << "y minnorm sol ";
-  for (int i = 0; i < maxIter_p1; i++) {
-      std::cout << y[i] << " ";
-  }
-  std::cout << std::endl;
 
   // Actual solution Qy calculation with Q
   init(n * T, sol, 0.0);
