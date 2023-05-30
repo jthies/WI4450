@@ -81,3 +81,36 @@
         std::cout << std::endl;
     }
     std::cout << std::endl;
+
+
+
+// //Print e_1 with the Givens rotation
+    // std::cout << "e_1 with Givens rotation" << std::endl;
+    // for (int i = 0; i < maxIter; i++) {
+    //     std::cout << e_1[i] << " ";
+    // }
+
+    // // //Print H with the Givens rotation
+    // std::cout << "H with Givens rotation" << std::endl;
+    // for (int i = 0; i < maxIter_p1; i++) {
+    //     for (int k = 0; k < maxIter; k++) {
+    //         std::cout << H[index(i, k, maxIter_p1)] << " ";
+    //     }
+    //     std::cout << std::endl;
+    // }
+
+// //Print e_1 with the Givens rotation
+    // std::cout << "e_1 with Givens rotation" << std::endl;
+    // for (int i = 0; i < maxIter; i++) {
+    //     std::cout << e_1[i] << " ";
+    // }
+    // std::cout << std::endl;
+
+    // // //Print H with the Givens rotation
+    // std::cout << "H with Givens rotation" << std::endl;
+    // for (int i = 0; i < maxIter_p1; i++) {
+    //     for (int k = 0; k < maxIter; k++) {
+    //         std::cout << H[index(i, k, maxIter_p1)] << " ";
+    //     }
+    //     std::cout << std::endl;
+    // }

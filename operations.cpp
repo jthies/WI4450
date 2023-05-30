@@ -1,5 +1,6 @@
 #include "operations.hpp"
 #include <omp.h>
+#include <iostream>
 
 #include <cmath>
 #include <stdexcept>
@@ -37,8 +38,63 @@ void axpby(int n, double a, double const* x, double b, double* y)
   for (int i=0; i<n; i++){
     y[i] = a*x[i] + b*y[i];
   }
-
   return;
+}
+
+void matrix2vec(int n, int const j, double* x, double const* Q){
+  #pragma omp parallel for
+  for (int i = 0; i < n; i++) {
+    x[i] = Q[index(i, j, n)];
+  }
+}
+
+void vec2matrix(int n, int const j,double const* x, double* Q){
+  #pragma omp parallel for
+  for (int i = 0; i < n; i++) {
+    Q[index(i, j, n)] = x[i];
+  }
+}
+
+double matrix_col_vec_dot(int n, int const j, double const* x, double const* Q){
+  double dot = 0.0;
+  #pragma omp parallel for reduction(+:dot)
+  for (int i = 0; i < n; i++) {
+    dot += Q[index(i, j, n)] * x[i];
+  }
+  return dot;
+}
+
+double matrix_col_dot(int n, int const j, double const* Q){
+  double dot = 0.0;
+  #pragma omp parallel for reduction(+:dot)
+  for (int i = 0; i < n; i++) {
+    dot += Q[index(i, j, n)] * Q[index(i, j, n)];
+  }
+  return dot;
+}
+
+void matrix_col_scale(int n, int const j, double a, double* Q){
+  #pragma omp parallel for
+  for (int i = 0; i < n; i++) {
+    Q[index(i, j, n)] = Q[index(i, j, n)] / a;
+  }
+}
+
+void orthogonalize_Q(int n, int n_H, int const i,int const j,double *Q,double const* H){
+  for (int k = 0; k < n ; k++) {
+    Q[index(k, j, n)] -= H[index(i, j, n_H)] * Q[index(k, i, n)];
+  }
+}
+
+void matrix_vec_prod(int n_r, int n_col, double* x, const double* Q, const double* y){
+    #pragma omp parallel for
+    for (int i = 0; i < n_r; i++) {
+        double sum = 0.0;
+        for (int j = 0; j < n_col; j++) {
+            sum += Q[index(i, j, n_r)] * y[j];
+        }
+        x[i] = sum;
+    }
 }
 
 //! apply a 7-point stencil to a vector

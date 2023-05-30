@@ -21,6 +21,20 @@ void axpby(int n, double a, double const* x, double b, double* y);
 
 void yAx(int n, double* y, double* A, double* x);
 
+void matrix2vec(int n, int const j, double* x, double const* Q);
+
+void vec2matrix(int n, int const j,double const* x, double* Q);
+
+double matrix_col_vec_dot(int n, int const j, double const* x, double const* Q);
+
+double matrix_col_dot(int n, int const j, double const* Q);
+
+void matrix_col_scale(int n, int const j, double a, double* Q);
+
+void orthogonalize_Q(int n, int n_H, int const i,int const j,double *Q,double const* H);
+
+void matrix_vec_prod(int n_r, int n_col, double* x, const double* Q, const double* y);
+
 //////////////////////////////////
 // Linear operator application  //
 //////////////////////////////////

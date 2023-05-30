@@ -443,92 +443,47 @@ void time_integration_gmres(stencil3d const* L, int n, double* x0, const double*
     init(maxIter, cs, 0.0);
 
 
-    // Ax = A*x0 --> NOTE: with x0 = 0, Ax = 0 and this computation is not necessary 
-    Ax_apply_stencil(L, x0, Ax, T, n, delta_t);
+  // Ax = A*x0 --> NOTE: with x0 = 0, Ax = 0 and this computation is not necessary 
+  Ax_apply_stencil(L, x0, Ax, T, n, delta_t);
     // apply_stencil3d(L,x0,Ax);
-    
-    // r_0 (=: Ax) = b - Ax
-    axpby(n * T, 1.0, b, -1.0, Ax);
-    r_norm = sqrt(dot(n * T, Ax, Ax));
-    b_norm = sqrt(dot(n * T, b, b));
+  
+  // r_0 (=: Ax) = b - Ax
+  axpby(n * T, 1.0, b, -1.0, Ax);
+  r_norm = sqrt(dot(n * T, Ax, Ax));
+  b_norm = sqrt(dot(n * T, b, b));
 
-    // Q[:][0] = r_0/||r_0||_2
-    for (int i = 0; i < n * T; i++) {
-        Q[index(i, 0, n * T)] = Ax[i] / (r_norm);
-        // Q[index(i, 0, n * T)] = Ax[i] / (r_norm*(1+pertubation*(float)rand()));
+  // Q[:][0] = r_0/||r_0||_2
+  vec2matrix(n*T,0,Ax, Q);
+  matrix_col_scale(n*T,0,r_norm, Q);
+
+  // Set e_1 to be [beta,0,...0]
+  init(maxIter_p1, e_1, 0.0);
+  e_1[0] = r_norm;
+  
+  // Perform the Arnoldi iteration
+  for (int j = 0; j < maxIter; j++) {
+    // Put Q[:,j] into Q_j
+    matrix2vec(n*T,j,Q_j,Q);
+    // Calculate A*Q[:,j]
+    Ax_apply_stencil(L, Q_j, AQ, T, n, delta_t);
+    //apply_stencil3d(L,Q_j,AQ);
+    // Put AQ into Q[:,j+1]
+    vec2matrix(n*T,j+1,AQ,Q);
+    for (int i = 0; i < j + 1; i++) {
+        // H[i][j] = Q[:][i]^T*Q[:,j+1]
+        H[index(i, j, maxIter_p1)] = matrix_col_vec_dot(n*T, i, AQ, Q);
+        // Q[:][j+1] = Q[:][j+1] - H[i][j]*Q[:,i]
+        orthogonalize_Q(n*T,maxIter_p1,i,j+1,Q,H);
     }
-
-    // std::cout << "r_0" << std::endl;
-    // for (int i = 0; i < n * T; i++) {
-    //     // Q[index(i, 0, n * T)] = Ax[i] / (r_norm);
-    //     std::cout << Q[index(i, 0, n * T)] << " ";
-    // }
-    // std::cout << std::endl;
-
-    // Set e_1 to be [beta,0,...0]
-    init(maxIter_p1, e_1, 0.0);
-    e_1[0] = r_norm;
-    
-    // Perform the Arnoldi iteration
-    for (int j = 0; j < maxIter; j++) {
-        // Put Q[:,j] into Q_j
-        for (int i = 0; i < n * T; i++) {
-            Q_j[i] = Q[index(i, j, n * T)];
-        }
-        // Calculate A*Q[:,j]
-        Ax_apply_stencil(L, Q_j, AQ, T, n, delta_t);
-        // apply_stencil3d(L,Q_j,AQ);
-        // Put AQ into Q[:,j+1]
-        // if (j==1){
-        //   std::cout << "r_0 = ";
-        //   print_vector(n*T, Q_j);
-        //   std::cout << "Ar_0 = ";
-        //   print_vector(n*T,AQ);
-        // }
-    
-        for (int i = 0; i < n * T; i++) {
-            Q[index(i, j + 1, n * T)] = AQ[i];
-        }
-
-        for (int i = 0; i < j + 1; i++) {
-            // H[i][j] = Q[:][i]^T*Q[:,j+1]
-            H[index(i, j, maxIter_p1)] = 0.0;
-            for (int k = 0; k < n * T; k++) {
-                H[index(i, j, maxIter_p1)] += Q[index(k, i, n * T)] * AQ[k];
-            }
-            // Q[:][j+1] = Q[:][j+1] - H[i][j]*Q[:,i]
-            for (int k = 0; k < n * T; k++) {
-                Q[index(k, j + 1, n * T)] -= H[index(i, j, maxIter_p1)] * Q[index(k, i, n * T)];
-            }
-        }
-        // H[j+1][j] = ||Q[:][j+1]||_2
-        H[index(j + 1, j, maxIter_p1)] = 0.0;
-        for (int k = 0; k < n * T; k++) {
-            H[index(j + 1, j, maxIter_p1)] += Q[index(k, j + 1, n * T)] * Q[index(k, j + 1, n * T)];
-        }
-        H[index(j + 1, j, maxIter_p1)] = sqrt(H[index(j + 1, j, maxIter_p1)]);
-        
-        if (H[index(j + 1, j, maxIter_p1)] > epsilon*1e-5){
-            // Q[:][j+1] = Q[:][j+1]/H[j+1][j]
-            for (int k = 0; k < n * T; k++) {
-                Q[index(k, j + 1, n * T)] /= H[index(j + 1, j, maxIter_p1)];
-            }
-
-        // if (j==1){
-        //   std::cout << "Q1 na orth" << std::endl;
-        //   for (int i = 0; i < n * T; i++) {
-        //   std::cout << Q[index(i, 2, n * T)] << " ";
-        //   }
-        //   std::cout << std::endl;
-        // }
-
-        } else {
-            std::cout << "Stopped since H[j+1,j] < epsilon" << std::endl;
-        }
-
-        if (j==1){
-          print_matrix(maxIter_p1, maxIter, H);
-        }
+    // H[j+1][j] = ||Q[:][j+1]||_2
+    H[index(j + 1, j, maxIter_p1)] = sqrt(matrix_col_dot(n*T,j+1,Q));
+    if (H[index(j + 1, j, maxIter_p1)] > epsilon*1e-5){
+        // Q[:][j+1] = Q[:][j+1]/H[j+1][j]
+        matrix_col_scale(n*T,j+1,H[index(j + 1, j, maxIter_p1)],Q);
+    } 
+    else {
+        std::cout << "Stopped since H[j+1,j] < epsilon" << std::endl;
+    }
 
         // Remember the e_1 and H as they are original/
         double H_origin[maxIter_p1 * maxIter] = {0.0};
@@ -647,33 +602,24 @@ void time_integration_gmres(stencil3d const* L, int n, double* x0, const double*
     // !!!!!!!!!!!!!!!!!
 
 
+  // Print the solution for the least squares problem.
+  std::cout << "y minnorm sol ";
+  for (int i = 0; i < maxIter_p1; i++) {
+      std::cout << y[i] << " ";
+  }
+  std::cout << std::endl;
 
-    // // Print Q[:,:j+1]
-    // std::cout << "Q[:,:j+1]" << std::endl;
-    // for (int i = 0; i < n*T; i++) {
-    //     for (int k = 0; k < iter + 1; k++) {
-    //         std::cout << Q[index(i, k, maxIter_p1)] << " ";
-    //     }
-    //     std::cout << std::endl;
-    // }
+  // Actual solution Qy calculation with Q
+  init(n * T, sol, 0.0);
+  matrix_vec_prod(n*T, iter+2, sol, Q, y);
+  // sol = Qy + x0
+  axpby(n * T, 1.0, x0, 1.0, sol);
 
-
-    // Actual solution Qy calculation with Q
-    init(n * T, sol, 0.0);
-    for (int i = 0; i < n * T; i++) {
-        for (int k = 0; k <= iter + 1; k++) {
-            sol[i] += Q[index(i, k, n * T)] * y[k];
-        }
-        // std::cout << "sol["<<i<<"]:"<<sol[i]<<std::endl;
-    }
-    // sol = Qy + x0
-    axpby(n * T, 1.0, x0, 1.0, sol);
-
-    // Calculate residual b - A*sol
-    init(n * T, Asol, 0);
-    Ax_apply_stencil(L, sol, Asol, T, n, delta_t);
+  // Calculate residual b - A*sol
+  init(n * T, Asol, 0);
+  Ax_apply_stencil(L, sol, Asol, T, n, delta_t);
     // apply_stencil3d(L,sol,Asol);
-    axpby(n*T, 1.0, b, -1.0, Asol);
+  axpby(n*T, 1.0, b, -1.0, Asol);
 
     // Calculate residual norm
     res = std::sqrt(dot(n*T, Asol, Asol));
@@ -683,10 +629,10 @@ void time_integration_gmres(stencil3d const* L, int n, double* x0, const double*
     std::cout << "residual e_1 / computed residual " << std::abs(e_1[iter+1])/res << std::endl;
     *resNorm = res;
 
-    delete [] sol;
-    delete [] Asol;
-    delete [] r;
-    delete [] Ax;
-    delete [] AQ;
-    delete [] Q_j;
+  delete [] sol;
+  delete [] Asol;
+  delete [] r;
+  delete [] Ax;
+  delete [] AQ;
+  delete [] Q_j;
 }
