@@ -9,6 +9,56 @@
 #include <iomanip>
 #include <omp.h>
 
+void time_integration_sequential(stencil3d const* op, int n, double* x, double const* x_0,
+        double  tol, double delta_t,   int  maxIter, int T,
+        double* resNorm, int* numIter,
+        int verbose)
+{
+  if (op->nx * op->ny * op->nz != n)
+  {
+    throw std::runtime_error("mismatch between stencil and vector dimension passed to time integration");
+  }
+  
+  // Create other variables needed
+  double *Ax = new double[n*T];
+  double *r = new double[n*T];
+  double *x_old = new double[n];
+  double *x_new = new double[n];
+
+  // Set the first x_old to be x_0 and put it in the solution vector x
+  axpby(n, 1.0, x_0, 0.0, x_old);
+  for (int k=0; k < n; k++){
+    x[k] = x_0[k];
+  }
+
+  for (int i=0; i < T-1; i++){ //in iteration T-2, x_{T-1} is calculated
+    // x_new = x_old + delta_t*L*x_old
+    apply_stencil3d_parallel(op, x_old, x_new);
+    axpby(n, 1.0, x_old, delta_t, x_new);
+    
+    // Copy x_new into the solution vector
+    for (int k=0; k < n; k++){
+      x[k+(i+1)*n] = x_new[k];
+    }
+
+    // x_old = x_new
+    axpby(n, 1.0, x_new, 0.0, x_old);
+  }
+
+  Ax_apply_stencil(op, x, Ax, T, n, delta_t);
+  // r = b - Ax 
+  axpby(n*T, 1.0, x_0, 0.0, r); // first copy b to r (we need to keep storing b)
+  axpby(n*T, -1.0, Ax, 1.0, r);
+
+  // Calculate norm of r and print it
+  *resNorm = dot(n*T,r,r);
+
+  delete [] Ax;
+  delete [] r;
+  delete [] x_old;
+  delete [] x_new;
+}
+
 void time_integration_parallel_L_parallel_Jacobi(stencil3d const* op, int n, double* x, double const* b,
         double tol, double delta_t, int maxIter, int T,
         double* resNorm, int* numIter,
@@ -380,42 +430,7 @@ void time_integration_Jacobi(stencil3d const* op, int n, double* x, double const
   return;
 }
 
-// void apply_givens_rotation(double& a, double& b, double& c, double& s) {
-//   if (b == 0.0) {
-//     c = 1.0;
-//     s = 0.0;
-//   } 
-//   else {
-//     if (abs(b) > abs(a)) {
-//       double tau = -a / b;
-//       s = 1.0 / sqrt(1.0 + tau * tau);
-//       c = s * tau;
-//     } else {
-//       double tau = -b / a;
-//       c = 1.0 / sqrt(1.0 + tau * tau);
-//       s = c * tau;
-//     }
-//   }
-//   // Apply rotation to a and b
-//   double temp = c * a - s * b;
-//   b = s * a + c * b;
-//   a = temp;
-// }
-
-// void apply_givens_to_H_e1(double* H, double* e_1, double c, double s, int j, int j1, int maxIter_p1) {
-//     for (int i = 0; i < maxIter_p1; ++i) {
-//         double tempH = c * H[index(j, i, maxIter_p1)] - s * H[index(j1, i, maxIter_p1)];
-//         H[index(j1, i, maxIter_p1)] = s * H[index(j, i, maxIter_p1)] + c * H[index(j1, i, maxIter_p1)];
-//         H[index(j, i, maxIter_p1)] = tempH;
-//     }
-
-//     double tempe_1 = c * e_1[j] - s * e_1[j1];
-//     e_1[j1] = s * e_1[j] + c * e_1[j];
-//     e_1[j] = tempe_1;
-// }
-
-
-void time_integration_gmres(stencil3d const* L, int n, double* x0, const double* b, int maxIter, double epsilon, double delta_t, int T, double* resNorm) {
+void time_integration_gmres(stencil3d const* L, int n, double* x0, const double* b, double epsilon, double delta_t, int maxIter, int T, double* resNorm, int* numIter) {
     int const maxIter_p1 = maxIter + 1;
     double Q[n * T * maxIter_p1] = {0.0};
     double H[maxIter_p1 * maxIter] = {0.0};
@@ -488,59 +503,58 @@ void time_integration_gmres(stencil3d const* L, int n, double* x0, const double*
         std::cout << "H[j+1,j] = 0" << std::endl;
     }
 
-        // Remember the e_1 and H as they are original/
-        double H_origin[maxIter_p1 * maxIter] = {0.0};
-        double e_1_origin[maxIter_p1] = {0.0}; 
-        for(int l = 0; l < maxIter_p1 * maxIter; l++){
-            H_origin[l] = H[l];
-        }
-        e_1_origin[0] = r_norm;
-    
-        // Givens rotation on H_:j+2,:j+1 to make upper triangular matrix = R        
-        given_rotation(j, H, cs, sn, maxIter_p1);
-
-        e_1[j + 1] = -sn[j] * e_1[j];
-        e_1[j] = cs[j] * e_1[j];
-
-        // //Print e_1 with the Givens rotation
-        // std::cout << "e_1 with Givens rotation" << std::endl;
-        // for (int i = 0; i < maxIter; i++) {
-        //     std::cout << e_1[i] << " ";
-        // }
-
-        // // //Print H with the Givens rotation
-        // std::cout << "H with Givens rotation" << std::endl;
-        // for (int i = 0; i < maxIter_p1; i++) {
-        //     for (int k = 0; k < maxIter; k++) {
-        //         std::cout << H[index(i, k, maxIter_p1)] << " ";
-        //     }
-        //     std::cout << std::endl;
-        // }
-
-        std::cout << "error iteration " << j << " is " << std::abs(e_1[j])/b_norm << std::endl;
-
-        // if (iter==maxIter){
-        if ((std::abs(e_1[j])/b_norm < epsilon) || (j==maxIter-1)){
-            iter = j;
-            std::cout <<"Iterations Stopped"<< std::endl;
-            std::cout <<"Iter:"<<iter << std::endl;
-            std::cout <<"Epsilon:"<<epsilon << std::endl;
-            std::cout <<"abs(e_1[j+1]):"<<std::abs(e_1[j+1]) << std::endl;
-            break;
-        }
-
+    // Remember the e_1 and H as they are original/
+    double H_origin[maxIter_p1 * maxIter] = {0.0};
+    double e_1_origin[maxIter_p1] = {0.0}; 
+    for(int l = 0; l < maxIter_p1 * maxIter; l++){
+        H_origin[l] = H[l];
     }
+    e_1_origin[0] = r_norm;
 
-    // Back substitution
-    init(n*T, y, 0);
-    y[iter] = e_1[iter]/H[index(iter, iter, maxIter_p1)];
-    for (int i=(iter-1); i>=0; i--){
-        y[i] = e_1[i];        
-        for (int j=i+1; j <= iter; j++){
-            y[i] -= H[index(i, j, maxIter_p1)]*y[j];
-        }           
-        y[i] = y[i] / H[index(i, i, maxIter_p1)];
+    // Givens rotation on H_:j+2,:j+1 to make upper triangular matrix = R        
+    given_rotation(j, H, cs, sn, maxIter_p1);
+
+    e_1[j + 1] = -sn[j] * e_1[j];
+    e_1[j] = cs[j] * e_1[j];
+
+    // //Print e_1 with the Givens rotation
+    // std::cout << "e_1 with Givens rotation" << std::endl;
+    // for (int i = 0; i < maxIter; i++) {
+    //     std::cout << e_1[i] << " ";
+    // }
+
+    // // //Print H with the Givens rotation
+    // std::cout << "H with Givens rotation" << std::endl;
+    // for (int i = 0; i < maxIter_p1; i++) {
+    //     for (int k = 0; k < maxIter; k++) {
+    //         std::cout << H[index(i, k, maxIter_p1)] << " ";
+    //     }
+    //     std::cout << std::endl;
+    // }
+
+    std::cout << std::setw(4) << j+1 << "\t" << std::setw(8) << std::setprecision(4) << std::abs(e_1[j+1])/r_norm << std::endl;
+
+    if ((std::abs(e_1[j+1])/r_norm < epsilon)){
+        iter = j;
+        std::cout <<"GMRES stopped, relative residual < epsilon"<< std::endl;
+        break;
     }
+    if (j==maxIter-1){
+        iter = j;
+        std::cout <<"GMRES stopped, max number of iterations is exceeded"<< std::endl;
+    }
+  } 
+
+  // Back substitution
+  init(n*T, y, 0);
+  y[iter] = e_1[iter]/H[index(iter, iter, maxIter_p1)];
+  for (int i=(iter-1); i>=0; i--){
+      y[i] = e_1[i];        
+      for (int j=i+1; j <= iter; j++){
+          y[i] -= H[index(i, j, maxIter_p1)]*y[j];
+      }           
+      y[i] = y[i] / H[index(i, i, maxIter_p1)];
+  }
 
 
   // Actual solution Qy calculation with Q
@@ -555,12 +569,13 @@ void time_integration_gmres(stencil3d const* L, int n, double* x0, const double*
     // apply_stencil3d(L,sol,Asol);
   axpby(n*T, 1.0, b, -1.0, Asol);
 
-    // Calculate residual norm
-    res = std::sqrt(dot(n*T, Asol, Asol));
-    // res = sqrt(res)/r_norm;
-    std::cout << "relative residual (from b-Ax):"<< res/r_norm <<std::endl;
-    std::cout << "relative residual (from e_1[j+1]):"<< std::abs(e_1[iter+1])/r_norm <<std::endl;
-    *resNorm = res;
+  // Calculate residual norm
+  res = std::sqrt(dot(n*T, Asol, Asol));
+  // res = sqrt(res)/r_norm;
+  std::cout << "relative residual (from b-Ax):"<< res/r_norm <<std::endl;
+  std::cout << "relative residual (from e_1[j+1]):"<< std::abs(e_1[iter+1])/r_norm <<std::endl;
+  *resNorm = res;
+  *numIter = iter;
 
   delete [] sol;
   delete [] Asol;
