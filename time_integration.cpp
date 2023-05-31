@@ -1,5 +1,6 @@
 #include "time_integration.hpp"
 #include "operations.hpp"
+#include "cg_solver.hpp"
 
 #include <cmath>
 #include <stdexcept>
@@ -9,7 +10,7 @@
 #include <iomanip>
 #include <omp.h>
 
-void time_integration_sequential(stencil3d const* op, int n, double* x, double const* x_0,
+void time_integration_sequential_FE(stencil3d const* op, int n, double* x, double const* x_0,
         double  tol, double delta_t,   int  maxIter, int T,
         double* resNorm, int* numIter,
         int verbose)
@@ -55,6 +56,59 @@ void time_integration_sequential(stencil3d const* op, int n, double* x, double c
 
   delete [] Ax;
   delete [] r;
+  delete [] x_old;
+  delete [] x_new;
+}
+
+
+void time_integration_sequential_BE(stencil3d const* op, int n, double* x, double const* x_0,
+        double  tol, double delta_t,   int  maxIter, int T,
+        double* resNorm, int* numIter,
+        int verbose)
+{
+  if (op->nx * op->ny * op->nz != n)
+  {
+    throw std::runtime_error("mismatch between stencil and vector dimension passed to time integration");
+  }
+  
+  // Create other variables needed
+  double *x_old = new double[n];
+  double *x_new = new double[n];
+
+  // Set the first x_old to be x_0 and put it in the solution vector x
+  axpby(n, 1.0, x_0, 0.0, x_old);
+  for (int k=0; k < n; k++){
+    x[k] = x_0[k];
+  }
+
+  // make the stencil I-delta_t*L
+  stencil3d IdtL;
+  IdtL.nx=op->nx; IdtL.ny=op->ny; IdtL.nz=op->nz;
+  IdtL.value_c = 1.0 - delta_t * op->value_c;
+  IdtL.value_n = -delta_t*op->value_n;
+  IdtL.value_e = -delta_t*op->value_e;
+  IdtL.value_s = -delta_t*op->value_s;
+  IdtL.value_w = -delta_t*op->value_w;
+  IdtL.value_t = -delta_t*op->value_t;
+  IdtL.value_b = -delta_t*op->value_b;
+
+  for (int i=0; i < T-1; i++){ //in iteration T-2, x_{T-1} is calculated
+    
+    // solve (I-delta_t*L)x_new = x_old with CG
+    cg_solver(&IdtL, n, x_new, x_old, tol, 1e3, resNorm, numIter, 0.0);
+    
+    // Copy x_new into the solution vector
+    for (int k=0; k < n; k++){
+      x[k+(i+1)*n] = x_new[k];
+    }
+
+    // x_old = x_new
+    axpby(n, 1.0, x_new, 0.0, x_old);
+  }
+
+  // TODO: calculate norm of error
+  *resNorm = 1.0;
+
   delete [] x_old;
   delete [] x_new;
 }

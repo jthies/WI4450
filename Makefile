@@ -14,14 +14,14 @@ default: run_tests.x main_cg_poisson.x main_benchmarks.x main_time_integration.x
 #define some dependencies on headers
 operations.o: operations.hpp timer.hpp
 cg_solver.o: cg_solver.hpp operations.hpp timer.hpp
-time_integration.o: time_integration.hpp operations.hpp timer.hpp
+time_integration.o: time_integration.hpp operations.hpp cg_solver.hpp timer.hpp
 # gmres.o: gmres.hpp operations.hpp timer.hpp time_integration.hpp
 gtest_mpi.o: gtest_mpi.hpp
 
 TEST_SOURCES=test_operations.cpp test_cg_solver.cpp
 MAIN_OBJ=main_cg_poisson.o cg_solver.o operations.o timer.o
 MAIN_BENCHM=main_benchmarks.o cg_solver.o operations.o timer.o
-MAIN_TI=main_time_integration.o time_integration.o operations.o timer.o
+MAIN_TI=main_time_integration.o time_integration.o operations.o cg_solver.o timer.o
 # MAIN_TI_GMRES=main_gmres_time_integration.o gmres.o operations.o timer.o time_integration.o
 
 run_tests.x: run_tests.cpp ${TEST_SOURCES} gtest_mpi.o operations.o cg_solver.o

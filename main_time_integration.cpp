@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
 
   try {
   Timer t("time_integration");
-  time_integration_sequential(&L, n, x, b, tol, delta_t, maxIter, T, &resNorm, &numIter);
+  time_integration_sequential_BE(&L, n, x, b, tol, delta_t, maxIter, T, &resNorm, &numIter);
   // time_integration_parallel_L_parallel_Jacobi(&L, n, x, b, tol, delta_t, maxIter,T, &resNorm, &numIter, 1.0);
   // time_integration_gmres(&L, n, x, b, tol, delta_t, maxIter, T, &resNorm, &numIter);
   std::cout << std::setw(4) << numIter+1 << "\t" << std::setw(8) << std::setprecision(4) << resNorm << std::endl;
