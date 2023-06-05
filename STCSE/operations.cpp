@@ -108,8 +108,9 @@ void matrix_vec_prod(int n_r, int n_col, double* x, const double* Q, const doubl
 }
 void print_vec(int n,const double* x){
   for (int i = 0; i < n; i++) {
-    std::cout<<x[i]<<std::endl;
+    std::cout<<x[i]<<",";
   }
+  std::cout<<std::endl;
 }
 
 //! apply a 7-point stencil to a vector

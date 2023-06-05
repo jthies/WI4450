@@ -27,6 +27,12 @@ void forward_euler(const int n,const int T,const int maxIter,const double epsilo
         }
         // x_{k-1} = x_k
         vec2vec(n,x_k,x_k_min_one);
+        if (i%10000==0){
+            double x_norm;
+            x_norm = sqrt(dot(n,x_k,x_k));
+            std::cout <<"time-step: "<< i << ", x_norm: "<<x_norm <<std::endl;
+        }
+
     }
     Ax_apply_stencil_forward_euler(n,T,deltaT,x,Ax,L);
     axpby(n*T,1.0,b,-1.0,Ax);

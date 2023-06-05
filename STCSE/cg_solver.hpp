@@ -13,3 +13,5 @@ void cg_solver(stencil3d const* op, int n, double* x, double const* b,
         int verbose=1);
 
 void cg_solver_it(stencil3d const* op, int n,int nIter, double* x, double const* b,int verbose=1);
+
+void cg_solver_tol(stencil3d const* op, int n, double tol, double* x, double const* b,int verbose=1);

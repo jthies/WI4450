@@ -45,7 +45,7 @@ void perturb_gmres(const int n,const int T,const int maxIter,const double epsilo
     double x[n*T] = {0.0};
     double Ax[n*T] = {0.0};
     double* perturb = new double[n*T]();
-    double perturb_coef = 1;
+    double perturb_coef = 1e-6;
     int iter;
     srand(1);
     std::cout<<"Perturbation Coefficient: "<<perturb_coef<<std::endl;
@@ -103,11 +103,8 @@ void perturb_gmres(const int n,const int T,const int maxIter,const double epsilo
     std::cout<<"Perturbation GMRES Finished"<<std::endl;
 }
 
-void block_cg_solver(const int n, const int T,const double deltaT,double* x,const double* b,const stencil3d* L){
-    double* cg_resNorm;
-    double epsilon =std::sqrt(std::numeric_limits<double>::epsilon());
-    const int n_cg_iter = 3;
-    int* cg_iter;
+void block_cg_solver(const int n, const int T,const double deltaT, double tol, double* x,const double* b,const stencil3d* L){
+    int n_cg_iter = 3;
     stencil3d D_be;
     D_be.nx=L->nx; D_be.ny=L->ny; D_be.nz=L->nz;
     D_be.value_c = 1.0 - deltaT * L->value_c;
@@ -117,17 +114,29 @@ void block_cg_solver(const int n, const int T,const double deltaT,double* x,cons
     D_be.value_w = -deltaT* L->value_w;
     D_be.value_t = -deltaT* L->value_t;
     D_be.value_b = -deltaT* L->value_b;
-    for (int i =0; i<T;i++){
+
+    // first part of solution to block diagonal matrix system is the rhs
+    for (int j = 0; j<n;j++){
+        x[j] = b[j];
+    }
+
+    for (int i =1; i<T;i++){ //TODO: can be made parallel?
+        
         double temp_x[n] = {0.0};
-        double* temp_b = new double[n*T]();
+        double* temp_b = new double[n]();
+        // copy part i^th from b into temp_b
         for (int j = 0; j<n;j++){
             temp_b[j] = b[(i*n)+j];
         }
-        cg_solver_it(&D_be,n,n_cg_iter,temp_x,temp_b,0);
+        // cg_solver_it(&D_be,n,n_cg_iter,temp_x,temp_b,0);
+        cg_solver_tol(&D_be,n,tol*1e-5,temp_x,temp_b,0);
+
+        // copy temp_x into i^th part of x
         for (int j = 0; j<n;j++){
             x[(i*n)+j] = temp_x[j];
         } 
         delete [] temp_b;
+        
     }
 }
 
@@ -135,20 +144,17 @@ void precond_cg_arnoldi(const int n, const int T,const int maxIter,const int j,c
     double* Q_j = new double[n*T]();
     double* AQ_j = new double[n*T]();
     double Q_j_p1[n*T] = {0.0};
-    double cg_x0[n*T] = {0.0};
-    double* cg_resNorm;
-    int* cg_n_iter_;
 
     //Q_j = Q[:,j] 
     matrix2vec(n*T,j,Q_j,Q);
     //Q[:,j+1] = AQ_j
     //Ax_apply_stencil_forward_euler(n, T, deltaT, Q_j, AQ_j, L);
     Ax_apply_stencil_backward_euler(n, T, deltaT, Q_j, AQ_j, L);
-    block_cg_solver(n, T,deltaT,Q_j_p1,AQ_j,L);
+    block_cg_solver(n, T,deltaT,epsilon,Q_j_p1,AQ_j,L);
     vec2matrix(n*T,j+1,Q_j_p1,Q);
     for (int i = 0; i < j + 1; i++) {
         // H[i][j] = Q[:][i]^T*Q[:,j+1]
-        H[index(i, j, maxIter+1)] = matrix_col_vec_dot(n*T, i, AQ_j, Q);
+        H[index(i, j, maxIter+1)] = matrix_col_vec_dot(n*T, i, Q_j_p1, Q);
         // Q[:][j+1] = Q[:][j+1] - H[i][j]*Q[:,i]
         orthogonalize_Q(n*T,maxIter+1,i,j+1,Q,H);
     }
@@ -162,6 +168,7 @@ void precond_cg_arnoldi(const int n, const int T,const int maxIter,const int j,c
 void jacobi_gmres(const int n,const int T,const int maxIter,const double epsilon, const double deltaT,const double* b, double* x0, double* resNorm, const stencil3d* L){
     std::cout<<"Starting Block Jacobi CG GMRES..."<<std::endl;
     double* r_0 = new double[n*T]();
+    double* Q_0 = new double[n*T]();
     double Q[n * T * (maxIter+1)] = {0.0};
     double H[(maxIter+1)*maxIter] = {0.0};
     double cos[maxIter] = {0.0};
@@ -170,21 +177,18 @@ void jacobi_gmres(const int n,const int T,const int maxIter,const double epsilon
     double y[n*T] = {0.0};
     double x[n*T] = {0.0};
     double Ax[n*T] = {0.0};
-    double* resNorm_cg;
-    int* n_iter_cg_;
     int iter;
-    int n_cg_iter = 3;
     
     //b_norm = ||b||_2
     double b_norm = sqrt(dot(n*T,b,b));
-    //r_0 = b - Ax_0
+    //Q_0 = M^(-1)(b - Ax_0)
     //Ax_apply_stencil_forward_euler(n, T, deltaT, x0, r_0, L);
     Ax_apply_stencil_backward_euler(n, T, deltaT, x0, r_0, L);
     axpby(n*T,1.0,b,-1.0,r_0);
-    block_cg_solver(n,T,deltaT,r_0,r_0,L);
+    block_cg_solver(n,T,deltaT,epsilon,Q_0,r_0,L);
     //Q[:,0] = r_0/||r_0||_2
-    double r0_norm = sqrt(dot(n*T,r_0,r_0));
-    vec2matrix(n*T,0,r_0,Q);
+    double r0_norm = sqrt(dot(n*T,Q_0,Q_0));
+    vec2matrix(n*T,0,Q_0,Q);
     matrix_col_scale(n*T, 0, r0_norm, Q);
     //e[0] = r0_norm
     e_1[0] = r0_norm;
@@ -221,6 +225,7 @@ void jacobi_gmres(const int n,const int T,const int maxIter,const double epsilon
     std::cout <<"Relative Residual: "<<rel_r_norm <<" (||r||_2/||r_0||_2)"<< std::endl;
     *resNorm = rel_r_norm;
     delete [] r_0;
+    delete [] Q_0;
     std::cout<<"Block Jacobi CG GMRES Finished"<<std::endl;
 }
 
