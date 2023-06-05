@@ -6,20 +6,15 @@
 #include <omp.h>
 
 
-void backward_euler(const int n,const int T,const int maxIter,const double epsilon,const double deltaT,const double* b,const double* x0,const stencil3d* L){
-    
+void backward_euler(const int n,const int T,const int maxIter,const double epsilon,const double deltaT,const double* b,double* x,double* resNorm,const stencil3d* L){
+    std::cout<<"Starting Backward Euler..."<<std::endl;
     double* x_k_min_one = new double[n];
     double* x_k = new double[n];
-    double* x = new double[n*T];
     double* Ax = new double[n*T];
-    double resNorm;
-    int numIter;
+    int* numIter = new int;
     // Copy initial solution into the solution vector
-    #pragma omp parallel for
-    for (int i = 0; i<n; i++){
-        x[i] = b[i];
-    }
     vec2vec(n,b,x_k_min_one);
+    vec2vec(n,b,x);
     stencil3d IdtL;
     IdtL.nx=L->nx; IdtL.ny=L->ny; IdtL.nz=L->nz;
     IdtL.value_c = 1.0 - deltaT * L->value_c;
@@ -30,8 +25,8 @@ void backward_euler(const int n,const int T,const int maxIter,const double epsil
     IdtL.value_t = -deltaT*L->value_t;
     IdtL.value_b = -deltaT*L->value_b;
     for (int i=0; i < T-1; i++){ 
-        cg_solver(&IdtL, n, x_k, x_k_min_one, epsilon, 1e3, &resNorm, &numIter, 1);
-        #pragma omp parallel for
+        cg_solver(&IdtL, n, x_k, x_k_min_one, epsilon, 1e3, resNorm, numIter, 0.0);
+        //#pragma omp parallel for
         for (int j = 0; j<n; j++){
             x[(i+1)*n+j] = x_k[j];
         }
@@ -45,7 +40,6 @@ void backward_euler(const int n,const int T,const int maxIter,const double epsil
     std::cout <<"Relative residual: "<<rel_r_norm <<std::endl;
     delete [] x_k_min_one;
     delete [] x_k;
-    delete [] x;
     delete [] Ax;
+    std::cout<<"Backward Euler Finished"<<std::endl;
 }
-    

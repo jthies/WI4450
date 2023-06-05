@@ -55,6 +55,7 @@ void backward_substitution(const int iter, const int maxIter, const double* e_1,
 }
 
 void gmres(const int n,const int T,const int maxIter,const double epsilon, const double deltaT,const double* b, const double* x0, double* resNorm, const stencil3d* L){
+    std::cout<<"Starting GMRES..."<<std::endl;
     double* r_0 = new double[n*T]();
     double Q[n * T * (maxIter+1)] = {0.0};
     double H[(maxIter+1)*maxIter] = {0.0};
@@ -108,6 +109,7 @@ void gmres(const int n,const int T,const int maxIter,const double epsilon, const
     std::cout <<"Relative residual: "<<rel_r_norm <<" (||r||_2/||r_0||_2)"<< std::endl;
     *resNorm = rel_r_norm;
     delete [] r_0;
+    std::cout<<"GMRES Finished"<<std::endl;
 }
 
 

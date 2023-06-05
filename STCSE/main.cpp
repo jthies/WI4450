@@ -43,9 +43,9 @@ stencil3d laplace3d_stencil(int nx, int ny, int nz)
 int main(int argc, char* argv[])
 {
   {Timer t("main");
-  int nx = 10;
-  int ny = 10;
-  int nz = 10;
+  int nx = 5;
+  int ny = 5;
+  int nz = 5;
   // total number of unknowns
   int n=nx*ny*nz;
   double dx=1.0/(nx-1), dy=1.0/(ny-1), dz=1.0/(nz-1);
@@ -53,9 +53,9 @@ int main(int argc, char* argv[])
   stencil3d L = laplace3d_stencil(nx,ny,nz);
 
   // solve the linear system of equations using parallel forward euler
-  int numIter=0, maxIter=20, T=3;
+  int numIter=0, maxIter=150, T=10;
   double resNorm=10e6, epsilon=std::sqrt(std::numeric_limits<double>::epsilon());
-  double deltaT = 1e-2;
+  double deltaT = 1e-6;
 
   // initial value: initial value for the time integration method included in the rhs
   double *b = new double[n*T];
@@ -65,14 +65,13 @@ int main(int argc, char* argv[])
   // solution vector: start with a 0 vector
   double* x = new double[n*T];
   init(n*T, x, 0.0);
-  
   try {
   Timer t("time_integration");
   //forward_euler(n,T,maxIter,epsilon,deltaT,b,x,&resNorm,&L);
   //backward_euler(n,T,maxIter,epsilon,deltaT,b,x,&resNorm,&L);
   gmres(n,T,maxIter,epsilon,deltaT,b,x,&resNorm,&L);
   //perturb_gmres(n,T,maxIter,epsilon,deltaT,b,x,&resNorm,&L);
-  jacobi_gmres(n,T,maxIter,epsilon,deltaT,b,x,&resNorm,&L);
+  //jacobi_gmres(n,T,maxIter,epsilon,deltaT,b,x,&resNorm,&L);
   } catch(std::exception e)
   {
     std::cerr << "Caught an exception in time_integation: " << e.what() << std::endl;

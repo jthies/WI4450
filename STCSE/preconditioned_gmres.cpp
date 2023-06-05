@@ -34,6 +34,7 @@ void perturb_arnoldi(const int n, const int T, const int maxIter,const int j,con
 
 
 void perturb_gmres(const int n,const int T,const int maxIter,const double epsilon, const double deltaT,const double* b, double* x0, double* resNorm, const stencil3d* L){
+    std::cout<<"Starting Perturbation GMRES..."<<std::endl;
     double* r_0 = new double[n*T]();
     double Q[n * T * (maxIter+1)] = {0.0};
     double H[(maxIter+1)*maxIter] = {0.0};
@@ -44,10 +45,12 @@ void perturb_gmres(const int n,const int T,const int maxIter,const double epsilo
     double x[n*T] = {0.0};
     double Ax[n*T] = {0.0};
     double* perturb = new double[n*T]();
+    double perturb_coef = 1;
     int iter;
     srand(1);
+    std::cout<<"Perturbation Coefficient: "<<perturb_coef<<std::endl;
     for (int i = 0; i<n*T;i++){
-        perturb[i] = 1+ (double) rand()/RAND_MAX;
+        perturb[i] = 1+ (double) rand()/RAND_MAX*perturb_coef;
     }
     //b_norm = ||b||_2
     double b_norm = sqrt(dot(n*T,b,b));
@@ -92,11 +95,12 @@ void perturb_gmres(const int n,const int T,const int maxIter,const double epsilo
     axpby(n*T, 1.0, b, -1.0, Ax);
     // rel_r_norm = ||r||_2/||b||_2 
     double rel_r_norm = sqrt(dot(n*T, Ax, Ax))/b_norm;
-    std::cout <<"Relative residual: "<<rel_r_norm <<" (||r||_2/||r_0||_2)"<< std::endl;
+    std::cout <<"Relative Residual: "<<rel_r_norm <<" (||r||_2/||r_0||_2)"<< std::endl;
     *resNorm = rel_r_norm;
 
     delete [] r_0;
     delete [] perturb;
+    std::cout<<"Perturbation GMRES Finished"<<std::endl;
 }
 
 void block_cg_solver(const int n, const int T,const double deltaT,double* x,const double* b,const stencil3d* L){
@@ -127,7 +131,6 @@ void block_cg_solver(const int n, const int T,const double deltaT,double* x,cons
     }
 }
 
-
 void precond_cg_arnoldi(const int n, const int T,const int maxIter,const int j,const double deltaT, const double epsilon, double* Q, double* H,const stencil3d* L){
     double* Q_j = new double[n*T]();
     double* AQ_j = new double[n*T]();
@@ -157,6 +160,7 @@ void precond_cg_arnoldi(const int n, const int T,const int maxIter,const int j,c
 
 
 void jacobi_gmres(const int n,const int T,const int maxIter,const double epsilon, const double deltaT,const double* b, double* x0, double* resNorm, const stencil3d* L){
+    std::cout<<"Starting Block Jacobi CG GMRES..."<<std::endl;
     double* r_0 = new double[n*T]();
     double Q[n * T * (maxIter+1)] = {0.0};
     double H[(maxIter+1)*maxIter] = {0.0};
@@ -214,21 +218,29 @@ void jacobi_gmres(const int n,const int T,const int maxIter,const double epsilon
     axpby(n*T, 1.0, b, -1.0, Ax);
     // rel_r_norm = ||r||_2/||b||_2 
     double rel_r_norm = sqrt(dot(n*T, Ax, Ax))/b_norm;
-    std::cout <<"Relative residual: "<<rel_r_norm <<" (||r||_2/||r_0||_2)"<< std::endl;
+    std::cout <<"Relative Residual: "<<rel_r_norm <<" (||r||_2/||r_0||_2)"<< std::endl;
     *resNorm = rel_r_norm;
-
     delete [] r_0;
+    std::cout<<"Block Jacobi CG GMRES Finished"<<std::endl;
 }
 
 
+// nauwekeurigheid van je tijdsstap en nauwkeurigheid van gmres, gmres moet nauwkeuriger zijn dan de tijdsdiscretizatie.
+
+//Kies toelrantie voor cg die lager is dan gmres...
+//kijken naar 
+// Euler voorwaards en achterwaarts integreren in de tijd
+// Euler achterwaards preconditioneren met euler forwards.
 
 
 
+// fout waarmee je gmres oplost moet een order kleiner zijn dan delta T
+// lange run met hele nauwkeurige oplossing met euler voorwaards
 
-
-
-
-
-
-
-
+//Laat zien dat het aantal iteraties bij forward euler en bakcward euler bij gmres gelijk is aan het aantal tijdstappen en verklaar dit
+//bij euler forward is er maar 1 eigenwaarden 
+// aantal verschillende eigenvectoren is gelijk aan het aantal tijdstappen en daarom doet hij er n stappen over
+//laplace matrix op hoofddiagonaal bij alle eigenwaarde corresponderen met 1 eigenvector 
+//n stappen nodig om die projectie weg te krijgen polynomen in matrices voor defecte matrix
+// 
+// 

@@ -228,8 +228,8 @@ void Ax_apply_stencil_backward_euler(const int n, const int T, const double delt
       // x_k = x_k - delta_t*Lx_k
       axpby(n, -deltaT, Lx_k, 1.0, x_k);
     }
-    // x_k = x_k + x_k_min_1 = x_k - delta_t*Lx_k + x_k_min_1
-    axpby(n, 1.0, x_k_min_1, 1.0, x_k);
+    // x_k = x_k - x_k_min_1 = x_k - delta_t*Lx_k - x_k_min_1
+    axpby(n, -1.0, x_k_min_1, 1.0, x_k);
 
     // Copy x_k into Ax
     for(int l=k*n; l<(k+1)*n; l++){

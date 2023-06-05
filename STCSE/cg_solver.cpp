@@ -85,12 +85,11 @@ void cg_solver(stencil3d const* op, int n, double* x, double const* b,
 
     std::swap(rho_old, rho);
   }// end of while-loop
-  
+
   // clean up
   delete [] p;
   delete [] q;
   delete [] r;
-  
   // return number of iterations and achieved residual
   *resNorm = rho;
   *numIter = iter;

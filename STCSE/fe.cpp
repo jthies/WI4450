@@ -4,8 +4,8 @@
 #include <cmath>
 #include <omp.h>
 
-void forward_euler(const int n,const int T,const int maxIter,const double epsilon,const double deltaT,const double* b, double* x, double* resNorm,const stencil3d* L){
-    
+void forward_euler(const int n,const int T,const int maxIter,const double epsilon,const double deltaT,const double* b,double* x,double* resNorm,const stencil3d* L){
+    std::cout<<"Starting Forward Euler..."<<std::endl;
     double* x_k_min_one = new double[n];
     double* x_k = new double[n];
     double* Ax = new double[n*T];
@@ -36,6 +36,6 @@ void forward_euler(const int n,const int T,const int maxIter,const double epsilo
     *resNorm = rel_r_norm;
     delete [] x_k_min_one;
     delete [] x_k;
-    delete [] x;
     delete [] Ax;
+    std::cout<<"Forward Euler Finished"<<std::endl;
 }
