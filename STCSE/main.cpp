@@ -54,10 +54,37 @@ int main(int argc, char* argv[])
 
   // solve the linear system of equations using parallel forward/backward euler
   double total_time = 10; //in seconds
+  
+  // Compute the 'real' solution with FE and delta_t=1e-5
+  int numIter_sol=0, maxIter_sol=150;
+  double resNorm_sol=1e6, epsilon_sol=1e-6; //std::sqrt(std::numeric_limits<double>::epsilon());
+  double deltaT_sol = 1e-4;
+  int T_sol_steps = total_time/deltaT_sol;
+  int T_sol = T_sol_steps + 1;
+
+  // initial value: initial value for the time integration method included in the rhs
+  double *b_sol = new double[n*T_sol];
+  init(n*T_sol, b_sol, 0.0);
+  init(n, b_sol, 1.0);
+
+  // solution vector: start with a 0 vector
+  double* x_sol = new double[n*T_sol];
+  init(n*T_sol, x_sol, 0.0);
+  try {
+  Timer t("Forward Euler solution");
+  forward_euler(n,T_sol,maxIter_sol,epsilon_sol,deltaT_sol,b_sol,x_sol,&resNorm_sol,&L);
+  } catch(std::exception e)
+  {
+    std::cerr << "Caught an exception in time_integation: " << e.what() << std::endl;
+    exit(-1);
+  }
+  
+  // Compute the approximate solution with a method of choice
   int numIter=0, maxIter=150;
   double resNorm=1e6, epsilon=1e-6; //std::sqrt(std::numeric_limits<double>::epsilon());
   double deltaT = 1e-2;
-  int T = total_time/deltaT;
+  int T_steps = total_time/deltaT;
+  int T = T_steps + 1;
 
   // initial value: initial value for the time integration method included in the rhs
   double *b = new double[n*T];
@@ -68,18 +95,32 @@ int main(int argc, char* argv[])
   double* x = new double[n*T];
   init(n*T, x, 0.0);
   try {
-  Timer t("time_integration");
-  // forward_euler(n,T,maxIter,epsilon,deltaT,b,x,&resNorm,&L);
-  //backward_euler(n,T,maxIter,epsilon,deltaT,b,x,&resNorm,&L);
-  // gmres(n,T,maxIter,epsilon,deltaT,b,x,&resNorm,&L);
+  Timer t("Time-integration method");
+  // backward_euler(n,T,maxIter,epsilon,deltaT,b,x,&resNorm,&L);
+  gmres(n,T,maxIter,epsilon,deltaT,b,x,&resNorm,&L);
   // perturb_gmres(n,T,maxIter,epsilon,deltaT,b,x,&resNorm,&L);
   // jacobi_gmres(n,T,maxIter,epsilon,deltaT,b,x,&resNorm,&L);
-  // print_vec(n*T, x);
   } catch(std::exception e)
   {
     std::cerr << "Caught an exception in time_integation: " << e.what() << std::endl;
     exit(-1);
   }
+
+  // Calculate error
+  double error = 0.0;
+  for(int i=0; i<n; i++){
+    error += std::abs(x_sol[n*T_sol_steps+i]*x[n*T_steps+i]);
+  }
+  // for (int i = 0; i<T_steps; i++){
+  //   int step = (int) T_sol_steps/T_steps;
+  //   for(int j = 0; j<n; j++){
+  //     error += x_sol[i*step*n+j]*x[i*n+j];
+  //   }
+  // }
+  std::cout << "error =" << std::sqrt(error) << std::endl;
+  
+  
+  delete [] x_sol;
   delete [] x;
   }
   Timer::summarize();
