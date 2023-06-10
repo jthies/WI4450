@@ -36,6 +36,8 @@ void matrix_vec_prod(int n_r, int n_col, double* x, const double* Q, const doubl
 
 void print_vec(int n,const double* x);
 
+double precision(const int n, const int T_1, const int T_2, const double* x_1, const double* x_2);
+
 //////////////////////////////////
 // Linear operator application  //
 //////////////////////////////////

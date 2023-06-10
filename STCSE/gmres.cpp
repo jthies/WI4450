@@ -85,7 +85,8 @@ void gmres(const int n,const int T,const int maxIter,const double epsilon, const
         givens(j,maxIter, cos, sin, H);
         e_1[j+1] = -sin[j]*e_1[j];
         e_1[j] = cos[j]*e_1[j];
-        std::cout << "Iter: " << j << " Error: " << std::abs(e_1[j+1])/b_norm << std::endl;
+        std::cout<< std::abs(e_1[j+1])/b_norm<<",";
+        //std::cout << "Iter: " << j << " Error: " << std::abs(e_1[j+1])/b_norm << std::endl;
         if ((std::abs(e_1[j+1])/b_norm < epsilon) || (j==maxIter-1)){
             iter=j;
             std::cout <<"GMRES Stopped"<< std::endl;

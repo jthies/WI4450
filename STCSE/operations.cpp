@@ -1,6 +1,7 @@
 #include "operations.hpp"
 #include <omp.h>
 #include <iostream>
+#include <cmath>
 
 int index(int x, int y, int n_row){
     return x + y*n_row;
@@ -111,6 +112,14 @@ void print_vec(int n,const double* x){
     std::cout<<x[i]<<",";
   }
   std::cout<<std::endl;
+}
+
+double precision(const int n, const int T_1, const int T_2, const double* x_1, const double* x_2){
+  double precision = 0.0;
+  for (int i =0; i<n; i++){
+    precision += abs(x_1[n*(T_1-1)+i]*x_2[n*(T_2-1)+i]);
+  }
+  return sqrt(precision);
 }
 
 //! apply a 7-point stencil to a vector
