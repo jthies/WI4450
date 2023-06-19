@@ -1,14 +1,10 @@
 #include "operations.hpp"
 #include <omp.h>
 #include <iostream>
-
 #include <cmath>
-#include <stdexcept>
-#include <iostream>
-#include <iomanip>
 
-int index(int x, int y, int no_rows){
-    return (int) (x + y*no_rows);
+int index(int x, int y, int n_row){
+    return x + y*n_row;
 }
 
 void init(int n, double* x, double value)
@@ -39,6 +35,20 @@ void axpby(int n, double a, double const* x, double b, double* y)
     y[i] = a*x[i] + b*y[i];
   }
   return;
+}
+
+void vector_scale(int n, const double* scale,double* x){
+  #pragma omp parallel for
+  for (int i=0; i<n; i++){
+    x[i] /= scale[i];
+  } 
+}
+
+void vec2vec(int n, const double* x, double* y){
+  #pragma omp parallel for
+  for (int i=0; i<n; i++){
+    y[i] = x[i];
+  } 
 }
 
 void matrix2vec(int n, int const j, double* x, double const* Q){
@@ -81,8 +91,9 @@ void matrix_col_scale(int n, int const j, double a, double* Q){
 }
 
 void orthogonalize_Q(int n, int n_H, int const i,int const j,double *Q,double const* H){
+  #pragma omp parallel for
   for (int k = 0; k < n ; k++) {
-    Q[index(k, j+1, n)] -= H[index(i, j, n_H)] * Q[index(k, i, n)];
+    Q[index(k, j, n)] -= H[index(i, j-1, n_H)] * Q[index(k, i, n)];
   }
 }
 
@@ -95,6 +106,20 @@ void matrix_vec_prod(int n_r, int n_col, double* x, const double* Q, const doubl
         }
         x[i] = sum;
     }
+}
+void print_vec(int n,const double* x){
+  for (int i = 0; i < n; i++) {
+    std::cout<<x[i]<<",";
+  }
+  std::cout<<std::endl;
+}
+
+double precision(const int n, const int T_1, const int T_2, const double* x_1, const double* x_2){
+  double precision = 0.0;
+  for (int i =0; i<n; i++){
+    precision += abs(x_1[n*(T_1-1)+i]*x_2[n*(T_2-1)+i]);
+  }
+  return sqrt(precision);
 }
 
 //! apply a 7-point stencil to a vector
@@ -149,8 +174,8 @@ void apply_stencil3d(stencil3d const* S,
   return;
 }
 
-void Ax_apply_stencil(const stencil3d *op, const double *x, double *Ax, int T, int n, double delta_t){
-  // #pragma omp parallel for
+void Ax_apply_stencil_forward_euler(const int n, const int T, const double deltaT, const double* x, double* Ax, const stencil3d *op){
+  #pragma omp parallel for
   for (int k=0; k<T; k++){
     double *x_k_min_1 = new double[n];
     double *x_k = new double[n];
@@ -172,11 +197,9 @@ void Ax_apply_stencil(const stencil3d *op, const double *x, double *Ax, int T, i
       // Lx_k_min_1 = op*x_k_min_1 (L is the operator)
       apply_stencil3d(op, x_k_min_1, Lx_k_min_1);
       // x_k_min_1 = - x_k_min_1 - delta_t*Lx_k_min_1
-      axpby(n, -delta_t, Lx_k_min_1, -1.0, x_k_min_1);
-      // x_k_min_1 = - x_k_min_1 + delta_t*Lx_k_min_1
-      // axpby(n, delta_t, Lx_k_min_1, -1.0, x_k_min_1);
+      axpby(n, -deltaT, Lx_k_min_1, -1.0, x_k_min_1);
     }
-    // x_k = x_k + x_k_min_1 = x_k - x_k_min_1 + delta_t*Lx_k_min_1
+    // x_k = x_k + x_k_min_1 = x_k - x_k_min_1 - delta_t*Lx_k_min_1
     axpby(n, 1.0, x_k_min_1, 1.0, x_k);
 
     // Copy x_k into Ax
@@ -190,48 +213,43 @@ void Ax_apply_stencil(const stencil3d *op, const double *x, double *Ax, int T, i
   return;
 }
 
-void print_vector(int n, double const* x){
-  for (int i=0;i<n;i++){
-    std::cout << x[i] << ", ";
-  }
-  std::cout << std::endl;
-}
-
-void print_matrix(int n, int m, double const* A){
-  std::cout << "[";
-  for (int i=0;i<n;i++){
-    std::cout << " [";
-    for (int j=0;j<m;j++){
-      std::cout << std::setw(10) << std::setprecision(4) << A[index(i,j,n)];
-      if (j<m-1){
-        std::cout << ",";
+void Ax_apply_stencil_backward_euler(const int n, const int T, const double deltaT, const double* x, double* Ax, const stencil3d *op){
+  #pragma omp parallel for
+  for (int k=0; k<T; k++){
+    double *x_k_min_1 = new double[n];
+    double *x_k = new double[n];
+    double *Lx_k = new double[n];
+    // copy x[k*n to (k+1)*n] into x_k
+    for(int l=k*n; l<(k+1)*n; l++){
+        x_k[l-k*n] = x[l];
       }
+    // Initialize the previous vector with zeros for the first time step
+    if (k==0){
+      init(n, x_k_min_1, 0.0);
+    } 
+    // Copy the previous timestep solution into x_k_min_1
+    else {
+      // copy x[(k-1)*n to k*n] into x_k_min_1
+      for(int l=(k-1)*n; l<k*n; l++){
+        x_k_min_1[l-(k-1)*n] = x[l];
+      }
+      // Lx_k = op*x_k (L is the operator)
+      apply_stencil3d(op, x_k, Lx_k);
+      // x_k = x_k - delta_t*Lx_k
+      axpby(n, -deltaT, Lx_k, 1.0, x_k);
     }
-    std::cout << "]," << std::endl;
+    // x_k = x_k - x_k_min_1 = x_k - delta_t*Lx_k - x_k_min_1
+    axpby(n, -1.0, x_k_min_1, 1.0, x_k);
+
+    // Copy x_k into Ax
+    for(int l=k*n; l<(k+1)*n; l++){
+        Ax[l] = x_k[l-k*n]; 
+    }
+    delete [] x_k_min_1;
+    delete [] x_k;
+    delete [] Lx_k;
   }
-  std::cout << "]" << std::endl;
-}
-
-// apply given rotation
-void given_rotation(int k, double* h, double* cs, double* sn, int maxIter_p1)
-{
-  double temp, t, cs_k, sn_k;
-  for (int i=0; i<k; i++)
-  {
-     temp = cs[i] * h[index(i,k,maxIter_p1)] + sn[i] * h[index(i+1,k,maxIter_p1)];
-     h[index(i+1, k, maxIter_p1)] = -sn[i] * h[index(i, k, maxIter_p1)] + cs[i] * h[index(i+1, k, maxIter_p1)];
-     h[index(i, k, maxIter_p1)] = temp;
-  }
-  
-  // update the next sin cos values for rotation
-  t = std::sqrt( h[index(k, k, maxIter_p1)]*h[index(k, k, maxIter_p1)] + h[index(k+1, k, maxIter_p1)]*h[index(k+1, k, maxIter_p1)] );
-  cs[k] = h[index(k, k, maxIter_p1)]/t;
-  sn[k] = h[index(k+1, k, maxIter_p1)]/t;
-
-  // eliminate h(i+1,i)
-  h[index(k, k, maxIter_p1)] = cs[k]*h[index(k, k, maxIter_p1)] + sn[k]*h[index(k+1, k, maxIter_p1)];
-  h[index(k+1, k, maxIter_p1)] = 0.0;
-
   return;
 }
+
 

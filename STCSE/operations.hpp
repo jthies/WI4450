@@ -3,10 +3,6 @@
 #include <sstream>
 #include <stdexcept>
 
-//////////////////////////////////
-// Vector operations            //
-//////////////////////////////////
-
 // index of two dimensional array
 int index(int x, int y, int no_rows);
 
@@ -19,7 +15,10 @@ double dot(int n, double const* x, double const* y);
 // vector update: compute y[i] = a*x[i] + b*y[i] for 0<=i<n
 void axpby(int n, double a, double const* x, double b, double* y);
 
-void yAx(int n, double* y, double* A, double* x);
+void vector_scale(int n, const double* scale,double* x);
+
+// initialize vector with values from another vector
+void vec2vec(int n, const double* x, double* y);
 
 void matrix2vec(int n, int const j, double* x, double const* Q);
 
@@ -34,6 +33,10 @@ void matrix_col_scale(int n, int const j, double a, double* Q);
 void orthogonalize_Q(int n, int n_H, int const i,int const j,double *Q,double const* H);
 
 void matrix_vec_prod(int n_r, int n_col, double* x, const double* Q, const double* y);
+
+void print_vec(int n,const double* x);
+
+double precision(const int n, const int T_1, const int T_2, const double* x_1, const double* x_2);
 
 //////////////////////////////////
 // Linear operator application  //
@@ -103,12 +106,9 @@ void apply_stencil3d(stencil3d const* op,
 
 //! apply a 7 point stencil for T timesteps in parallel
 // Calculate Ax when A consists of (-I+delta_t*op) on the lower diagonal and I on the diagonal
-void Ax_apply_stencil(const stencil3d *op, const double *x, double *Ax, int T, int n, double delta_t);
+void Ax_apply_stencil_forward_euler(const int n, const int T, const double deltaT, const double* x, double* Ax, const stencil3d *op);
+void Ax_apply_stencil_backward_euler(const int n, const int T, const double deltaT, const double* x, double* Ax, const stencil3d *op);
 
-// Print a vector of size n
-void print_vector(int n, double const* x);
 
-// Print a matrix with n rows and m columns
-void print_matrix(int n, int m, double const* A);
 
-void given_rotation(int k, double* h, double* cs, double* sn, int maxIter_p1);
+
